@@ -1,5 +1,9 @@
 # SkillWeaver
 
+[![Rust](https://img.shields.io/badge/Rust-2024_edition-orange?logo=rust)](https://www.rust-lang.org/)
+[![Ratatui](https://img.shields.io/badge/Ratatui-0.30-cyan)](https://ratatui.rs/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 SkillWeaver is now a real root Rust + Ratatui application in this repository.
 
 ## What is implemented in this slice

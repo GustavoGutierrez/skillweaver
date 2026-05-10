@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "context-engineer": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/context-engineer/SKILL.md",
+      "computedHash": "e1c53424a969fa62889d5829033d2ab28863154e5a173889c30c99d6ac5671a0"
+    },
+    "documentation-architect": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-architect/SKILL.md",
+      "computedHash": "908271bd272ec3360857df0069a0c9c88719bc861f7f51f0c799e54cd8ad5ffd"
+    },
+    "prd-writer": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/prd-writer/SKILL.md",
+      "computedHash": "ae44aceab4d62f0aeb947865a2443442c3135bf84f94e4b2132a9db073836db0"
+    },
+    "prp-writer": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/prp-writer/SKILL.md",
+      "computedHash": "d05952283a332ab613d8fe6473864468608b253ec986226b5ca74d2aca8be04d"
+    },
+    "ratatui-tui": {
+      "source": "blacktop/dotfiles",
+      "sourceType": "github",
+      "skillPath": "ai/skills/ratatui-tui/SKILL.md",
+      "computedHash": "89154e16a0455f9f1fbc299c5a6e0f290eb5a55fcf063bbff3113e953277085a"
+    },
+    "spec-writer": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/spec-writer/SKILL.md",
+      "computedHash": "2de0f205254c96f89e7a4ab44df6e918d86dd2254882ea6496ed5e9aafa16faa"
+    },
+    "story-refiner": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/story-refiner/SKILL.md",
+      "computedHash": "f3347a2c116990a5b95ac6f66177c683e492791df0ca147725ac7b7d7d707eaa"
+    },
+    "traceability-manager": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/traceability-manager/SKILL.md",
+      "computedHash": "2411cace8a7e44998403157b2b1486634dcc6248337e69cdb3b5e227a3a8513b"
+    },
+    "validation-strategist": {
+      "source": "gustavogutierrez/engineering-skills",
+      "sourceType": "github",
+      "skillPath": "skills/validation-strategist/SKILL.md",
+      "computedHash": "81f16c7981056b07735a366f6e3030e3ec9bd932a3a38a92b529bff4abaa542e"
+    }
+  }
+}

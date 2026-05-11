@@ -33,18 +33,31 @@ fn render_dashboard(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppM
         } else {
             Span::from("no").dim()
         };
-        vec![
+        let mut lines = vec![
             Line::from(vec![Span::from("Active profile: ").bold(), Span::from(&profile.name).cyan().bold()]),
             Line::from(vec![Span::from("Default: ").bold(), default_mark]),
             Line::from(""),
             Line::from(Span::from("Skills:").bold().green()),
-            if profile.skills.is_empty() { Line::from(Span::from("  (none — press [s] to add)").dim()) } else { Line::from(profile.skills.join("\n")) },
-            Line::from(""),
-            Line::from(Span::from("Rules:").bold().yellow()),
-            if profile.rules.is_empty() { Line::from(Span::from("  (none — press [r] to add)").dim()) } else { Line::from(profile.rules.join("\n")) },
-            Line::from(""),
-            Line::from(Span::from("[2] Profiles  [3] Repositories  [q] Quit").dim()),
-        ]
+        ];
+        if profile.skills.is_empty() {
+            lines.push(Line::from(Span::from("  (none — press [s] to add)").dim()));
+        } else {
+            for skill in &profile.skills {
+                lines.push(Line::from(format!("  • {skill}")));
+            }
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::from("Rules:").bold().yellow()));
+        if profile.rules.is_empty() {
+            lines.push(Line::from(Span::from("  (none — press [r] to add)").dim()));
+        } else {
+            for rule in &profile.rules {
+                lines.push(Line::from(format!("  • {rule}")));
+            }
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::from("[2] Profiles  [3] Repositories  [q] Quit").dim()));
+        lines
     } else {
         vec![
             Line::from(Span::from("Welcome!").cyan().bold()),
@@ -79,20 +92,33 @@ fn render_profiles(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
     );
 
     let detail: Vec<Line> = if let Some(profile) = model.store.profiles.get(model.selected_profile) {
-        vec![
+        let mut lines = vec![
             Line::from(vec![Span::from("Profile: ").bold(), Span::from(&profile.name).cyan().bold()]),
             Line::from(""),
             Line::from(Span::from("Skills:").bold().green()),
-            if profile.skills.is_empty() { Line::from(Span::from("  (none — press [s] to add)").dim()) } else { Line::from(profile.skills.iter().map(|s| format!("  • {s}")).collect::<Vec<_>>().join("\n")) },
-            Line::from(""),
-            Line::from(Span::from("Rules:").bold().yellow()),
-            if profile.rules.is_empty() { Line::from(Span::from("  (none — press [r] to add)").dim()) } else { Line::from(profile.rules.iter().map(|r| format!("  • {r}")).collect::<Vec<_>>().join("\n")) },
-            Line::from(""),
-            Line::from(Span::from("━".repeat(40)).dim()),
-            Line::from(Span::from("[c] Create  [e] Edit  [s] Add skill  [r] Add rule").bold()),
-            Line::from(Span::from("[d] Duplicate  [x] Delete  [i] Import  [o] Export").bold()),
-            Line::from(Span::from("[Enter]/[Space] Set default  [j/k] Move").dim()),
-        ]
+        ];
+        if profile.skills.is_empty() {
+            lines.push(Line::from(Span::from("  (none — press [s] to add)").dim()));
+        } else {
+            for skill in &profile.skills {
+                lines.push(Line::from(format!("  • {skill}")));
+            }
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::from("Rules:").bold().yellow()));
+        if profile.rules.is_empty() {
+            lines.push(Line::from(Span::from("  (none — press [r] to add)").dim()));
+        } else {
+            for rule in &profile.rules {
+                lines.push(Line::from(format!("  • {rule}")));
+            }
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::from("━".repeat(40)).dim()));
+        lines.push(Line::from(Span::from("[c] Create  [e] Edit  [s] Add skill  [r] Add rule").bold()));
+        lines.push(Line::from(Span::from("[d] Duplicate  [x] Delete  [i] Import  [o] Export").bold()));
+        lines.push(Line::from(Span::from("[Enter]/[Space] Set default  [j/k] Move").dim()));
+        lines
     } else {
         vec![Line::from(Span::from("No profile selected.").dim())]
     };

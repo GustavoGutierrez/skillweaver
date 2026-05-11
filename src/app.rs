@@ -1,19 +1,209 @@
+use std::path::Path;
+
 use crossterm::event::{self, Event, KeyCode};
 use ratatui::DefaultTerminal;
 
 use crate::AppResult;
-use crate::model::{AppModel, Modal, Screen};
+use crate::domain::profile::{InstallMode, Profile, ProfileStoreData};
+use crate::domain::source::{SourceRegistration, SourceType};
+use crate::infra::profile_store::ProfileStore;
+use crate::model::{AppModel, Modal, RuntimeDiscovery, Screen};
+use crate::services::discovery::discover_skills;
+use crate::services::profile_io::{export_profiles, import_profiles};
 
-pub fn update(model: &mut AppModel, key: KeyCode) {
+const PROFILE_IO_BUNDLE_PATH: &str = "skillweaver-profiles.json";
+
+fn default_store() -> ProfileStoreData {
+    ProfileStoreData {
+        schema_version: ProfileStoreData::SCHEMA_VERSION,
+        ..Default::default()
+    }
+}
+
+fn normalize_selection(model: &mut AppModel) {
+    if model.store.profiles.is_empty() {
+        model.selected_profile = 0;
+    } else {
+        model.selected_profile = model.selected_profile.min(model.store.profiles.len() - 1);
+    }
+    if model.store.sources.is_empty() {
+        model.selected_source = 0;
+    } else {
+        model.selected_source = model.selected_source.min(model.store.sources.len() - 1);
+    }
+    if model.discoveries.is_empty() {
+        model.selected_discovery = 0;
+    } else {
+        model.selected_discovery = model.selected_discovery.min(model.discoveries.len() - 1);
+    }
+}
+
+fn refresh_discoveries(model: &mut AppModel) {
+    model.discoveries.clear();
+    for src in &model.store.sources {
+        let root = Path::new(&src.root);
+        let Ok(found) = discover_skills(root) else {
+            continue;
+        };
+        for item in found {
+            let skill_name = item
+                .path
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| item.metadata.name.clone());
+            model.discoveries.push(RuntimeDiscovery {
+                source_name: src.name.clone(),
+                source_root: src.root.clone(),
+                skill_name,
+                skill_path: item.path.display().to_string(),
+            });
+        }
+    }
+    normalize_selection(model);
+}
+
+fn save_model(model: &mut AppModel, store: &ProfileStore) {
+    if let Err(e) = store.save(&model.store) {
+        model.status = format!("Save failed: {e}");
+    }
+}
+
+fn selected_profile_mut(model: &mut AppModel) -> Option<&mut Profile> {
+    model.store.profiles.get_mut(model.selected_profile)
+}
+
+fn selected_profile(model: &AppModel) -> Option<&Profile> {
+    model.store.profiles.get(model.selected_profile)
+}
+
+fn add_selected_discovery_to_active_profile(model: &mut AppModel) {
+    let Some(discovery) = model.discoveries.get(model.selected_discovery).cloned() else {
+        model.status = "No discovery selected".into();
+        return;
+    };
+    let Some(profile) = selected_profile_mut(model) else {
+        model.status = "No active profile".into();
+        return;
+    };
+    if profile.skills.iter().any(|s| s == &discovery.skill_name) {
+        model.status = "Skill already in profile".into();
+        return;
+    }
+    profile.skills.push(discovery.skill_name.clone());
+    model.status = format!("Added '{}' to profile", discovery.skill_name);
+}
+
+pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
     if model.modal.is_some() {
         match key {
             KeyCode::Esc => {
                 model.modal = None;
+                model.input.clear();
+                model.input_secondary.clear();
+                model.input_focus_secondary = false;
                 model.status = "Modal closed".into();
             }
-            KeyCode::Char('i') if model.modal == Some(Modal::Preview) => {
-                model.modal = Some(Modal::InstallConfirm);
-                model.status = "Install confirmation opened".into();
+            KeyCode::Tab if model.modal == Some(Modal::AddSource) => {
+                model.input_focus_secondary = !model.input_focus_secondary;
+            }
+            KeyCode::Backspace => {
+                if model.modal == Some(Modal::AddSource) && model.input_focus_secondary {
+                    model.input_secondary.pop();
+                } else {
+                    model.input.pop();
+                }
+            }
+            KeyCode::Enter => {
+                match model.modal {
+                    Some(Modal::CreateProfile) => {
+                        let name = model.input.trim();
+                        if name.is_empty() {
+                            model.status = "Profile name is required".into();
+                            return;
+                        }
+                        let id = format!("profile-{}", model.store.profiles.len() + 1);
+                        model.store.profiles.push(Profile {
+                            id,
+                            name: name.to_string(),
+                            description: None,
+                            skills: Vec::new(),
+                            rules: Vec::new(),
+                            install_mode: InstallMode::Auto,
+                        });
+                        model.selected_profile = model.store.profiles.len() - 1;
+                        model.store.default_profile_id = model.store.profiles.get(model.selected_profile).map(|p| p.id.clone());
+                        model.modal = None;
+                        model.input.clear();
+                        save_model(model, store);
+                        model.status = "Profile created".into();
+                    }
+                    Some(Modal::EditProfile) => {
+                        let name = model.input.trim().to_string();
+                        if name.is_empty() {
+                            model.status = "Profile name is required".into();
+                            return;
+                        }
+                        if let Some(profile) = selected_profile_mut(model) {
+                            profile.name = name;
+                            model.modal = None;
+                            model.input.clear();
+                            save_model(model, store);
+                            model.status = "Profile renamed".into();
+                        }
+                    }
+                    Some(Modal::DeleteProfileConfirm) => {
+                        if model.store.profiles.is_empty() {
+                            model.modal = None;
+                            return;
+                        }
+                        model.store.profiles.remove(model.selected_profile);
+                        normalize_selection(model);
+                        model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
+                        model.modal = None;
+                        save_model(model, store);
+                        model.status = "Profile deleted".into();
+                    }
+                    Some(Modal::AddSource) => {
+                        let name = model.input.trim();
+                        let root = model.input_secondary.trim();
+                        if name.is_empty() || root.is_empty() {
+                            model.status = "Source name and path are required".into();
+                            return;
+                        }
+                        if !Path::new(root).exists() {
+                            model.status = "Source path does not exist".into();
+                            return;
+                        }
+                        model.store.sources.push(SourceRegistration {
+                            name: name.to_string(),
+                            root: root.to_string(),
+                            source_type: SourceType::Local,
+                        });
+                        model.selected_source = model.store.sources.len() - 1;
+                        model.modal = None;
+                        model.input.clear();
+                        model.input_secondary.clear();
+                        model.input_focus_secondary = false;
+                        refresh_discoveries(model);
+                        save_model(model, store);
+                        model.status = "Source registered".into();
+                    }
+                    None => {}
+                }
+            }
+            KeyCode::Char(' ') => {
+                if model.modal == Some(Modal::AddSource) && model.input_focus_secondary {
+                    model.input_secondary.push(' ');
+                } else {
+                    model.input.push(' ');
+                }
+            }
+            KeyCode::Char(ch) => {
+                if model.modal == Some(Modal::AddSource) && model.input_focus_secondary {
+                    model.input_secondary.push(ch);
+                } else {
+                    model.input.push(ch);
+                }
             }
             _ => {}
         }
@@ -28,20 +218,128 @@ pub fn update(model: &mut AppModel, key: KeyCode) {
         KeyCode::Char('3') => model.active = Screen::Repositories,
         KeyCode::Char('4') => model.active = Screen::SystemSettings,
         KeyCode::Char('5') | KeyCode::Char('h') => model.active = Screen::Help,
-        KeyCode::Char('p') => {
-            model.modal = Some(Modal::Preview);
-            model.status = "Preview opened".into();
-        }
-        _ => {}
+        _ => match model.active {
+            Screen::Profiles => match key {
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if !model.store.profiles.is_empty() {
+                        model.selected_profile = (model.selected_profile + 1).min(model.store.profiles.len() - 1);
+                    }
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    model.selected_profile = model.selected_profile.saturating_sub(1);
+                }
+                KeyCode::Char('c') => {
+                    model.modal = Some(Modal::CreateProfile);
+                    model.input.clear();
+                    model.status = "Create profile".into();
+                }
+                KeyCode::Char('e') => {
+                    if let Some(profile_name) = selected_profile(model).map(|p| p.name.clone()) {
+                        model.modal = Some(Modal::EditProfile);
+                        model.input = profile_name;
+                        model.status = "Edit profile".into();
+                    }
+                }
+                KeyCode::Char('x') => {
+                    if selected_profile(model).is_some() {
+                        model.modal = Some(Modal::DeleteProfileConfirm);
+                    }
+                }
+                KeyCode::Char('d') => {
+                    if let Some(profile) = selected_profile(model).cloned() {
+                        let mut duplicated = profile;
+                        duplicated.id = format!("profile-{}", model.store.profiles.len() + 1);
+                        duplicated.name = format!("{} copy", duplicated.name);
+                        model.store.profiles.push(duplicated);
+                        model.selected_profile = model.store.profiles.len() - 1;
+                        save_model(model, store);
+                        model.status = "Profile duplicated".into();
+                    }
+                }
+                KeyCode::Enter => {
+                    model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
+                    save_model(model, store);
+                    model.status = "Default profile selected".into();
+                }
+                KeyCode::Char(' ') => {
+                    model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
+                    save_model(model, store);
+                    model.status = "Default profile selected".into();
+                }
+                KeyCode::Char('i') => {
+                    let path = Path::new(PROFILE_IO_BUNDLE_PATH);
+                    match import_profiles(path) {
+                        Ok(data) => {
+                            model.store = data;
+                            normalize_selection(model);
+                            refresh_discoveries(model);
+                            save_model(model, store);
+                            model.status = format!("Profiles imported from {}", path.display());
+                        }
+                        Err(err) => {
+                            model.status = format!("Import failed: {err}");
+                        }
+                    }
+                }
+                KeyCode::Char('o') => {
+                    let path = Path::new(PROFILE_IO_BUNDLE_PATH);
+                    match export_profiles(path, &model.store) {
+                        Ok(()) => {
+                            model.status = format!("Profiles exported to {}", path.display());
+                        }
+                        Err(err) => {
+                            model.status = format!("Export failed: {err}");
+                        }
+                    }
+                }
+                _ => {}
+            },
+            Screen::Repositories => match key {
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if !model.discoveries.is_empty() {
+                        model.selected_discovery = (model.selected_discovery + 1).min(model.discoveries.len() - 1);
+                    }
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    model.selected_discovery = model.selected_discovery.saturating_sub(1);
+                }
+                KeyCode::Char('a') => {
+                    add_selected_discovery_to_active_profile(model);
+                    save_model(model, store);
+                }
+                KeyCode::Char(' ') => {
+                    add_selected_discovery_to_active_profile(model);
+                    save_model(model, store);
+                }
+                KeyCode::Char('n') => {
+                    model.modal = Some(Modal::AddSource);
+                    model.input.clear();
+                    model.input_secondary.clear();
+                    model.input_focus_secondary = false;
+                }
+                KeyCode::Char('r') => {
+                    refresh_discoveries(model);
+                    model.status = format!("Scan complete: {} skills", model.discoveries.len());
+                }
+                _ => {}
+            },
+            _ => {}
+        },
     }
+    normalize_selection(model);
 }
 
 pub fn run(mut terminal: DefaultTerminal) -> AppResult<()> {
+    let store = ProfileStore::user_default()?;
     let mut model = AppModel::default();
+    model.store = store.load().unwrap_or_else(|_| default_store());
+    refresh_discoveries(&mut model);
+    normalize_selection(&mut model);
+
     while !model.quit {
         terminal.draw(|frame| crate::ui::render(frame, &model))?;
         if let Event::Key(k) = event::read()? {
-            update(&mut model, k.code);
+            update(&mut model, k.code, &store);
         }
     }
     Ok(())
@@ -52,31 +350,157 @@ mod tests {
     use crossterm::event::KeyCode;
 
     use crate::app::update;
-    use crate::model::{AppModel, Modal};
+    use crate::infra::profile_store::ProfileStore;
+    use crate::model::{AppModel, Modal, Screen};
 
     #[test]
-    fn modal_lifecycle_preview_to_install_to_close() {
+    fn create_profile_modal_creates_and_selects_profile() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
         let mut model = AppModel::default();
-        update(&mut model, KeyCode::Char('p'));
-        assert_eq!(model.modal, Some(Modal::Preview));
 
-        update(&mut model, KeyCode::Char('i'));
-        assert_eq!(model.modal, Some(Modal::InstallConfirm));
+        model.active = Screen::Profiles;
+        update(&mut model, KeyCode::Char('c'), &store);
+        assert_eq!(model.modal, Some(Modal::CreateProfile));
+        update(&mut model, KeyCode::Char('A'), &store);
+        update(&mut model, KeyCode::Char('p'), &store);
+        update(&mut model, KeyCode::Enter, &store);
 
-        update(&mut model, KeyCode::Esc);
-        assert_eq!(model.modal, None);
+        assert!(model.modal.is_none());
+        assert_eq!(model.store.profiles.len(), 1);
+        assert_eq!(model.store.profiles[0].name, "Ap");
+        assert!(model.store.default_profile_id.is_some());
     }
 
     #[test]
-    fn modal_open_blocks_screen_navigation_until_closed() {
+    fn modal_blocks_navigation_until_escape() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
         let mut model = AppModel::default();
-        update(&mut model, KeyCode::Char('p'));
+
+        update(&mut model, KeyCode::Char('2'), &store);
+        update(&mut model, KeyCode::Char('c'), &store);
         let before = model.active;
-        update(&mut model, KeyCode::Tab);
+        update(&mut model, KeyCode::Tab, &store);
         assert_eq!(model.active, before);
 
-        update(&mut model, KeyCode::Esc);
-        update(&mut model, KeyCode::Tab);
+        update(&mut model, KeyCode::Esc, &store);
+        update(&mut model, KeyCode::Tab, &store);
         assert_ne!(model.active, before);
+    }
+
+    #[test]
+    fn add_source_flow_validates_and_registers_local_source() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources_root = dir.path().join("sources");
+        std::fs::create_dir_all(&sources_root).unwrap();
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
+        let mut model = AppModel::default();
+        model.active = Screen::Repositories;
+
+        update(&mut model, KeyCode::Char('n'), &store);
+        for ch in "local".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Tab, &store);
+        for ch in sources_root.display().to_string().chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+
+        assert_eq!(model.store.sources.len(), 1);
+        assert_eq!(model.store.sources[0].name, "local");
+    }
+
+    #[test]
+    fn edit_profile_modal_updates_name() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
+        let mut model = AppModel::default();
+
+        model.active = Screen::Profiles;
+        update(&mut model, KeyCode::Char('c'), &store);
+        for ch in "Old".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+
+        update(&mut model, KeyCode::Char('e'), &store);
+        assert_eq!(model.modal, Some(Modal::EditProfile));
+        update(&mut model, KeyCode::Backspace, &store);
+        update(&mut model, KeyCode::Backspace, &store);
+        update(&mut model, KeyCode::Backspace, &store);
+        for ch in "New".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+
+        assert_eq!(model.store.profiles[0].name, "New");
+    }
+
+    #[test]
+    fn export_then_import_profiles_from_runtime_flow() {
+        let dir = tempfile::tempdir().unwrap();
+        let cwd = std::env::current_dir().unwrap();
+        std::env::set_current_dir(dir.path()).unwrap();
+
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
+        let mut model = AppModel::default();
+        model.active = Screen::Profiles;
+
+        update(&mut model, KeyCode::Char('c'), &store);
+        for ch in "Alpha".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+        update(&mut model, KeyCode::Char('o'), &store);
+
+        model.store.profiles.clear();
+        model.store.default_profile_id = None;
+        update(&mut model, KeyCode::Char('i'), &store);
+
+        assert_eq!(model.store.profiles.len(), 1);
+        assert_eq!(model.store.profiles[0].name, "Alpha");
+
+        std::env::set_current_dir(cwd).unwrap();
+    }
+
+    #[test]
+    fn space_key_matches_contract_for_selection_actions() {
+        let dir = tempfile::tempdir().unwrap();
+        let sources_root = dir.path().join("sources");
+        std::fs::create_dir_all(sources_root.join("skills/space-skill")).unwrap();
+        std::fs::write(
+            sources_root.join("skills/space-skill/SKILL.md"),
+            "---\nname: space-skill\ndescription: demo\ntriggers:\n  - x\n---\n# body",
+        )
+        .unwrap();
+
+        let store = ProfileStore::new(dir.path().join("profiles.json"));
+        let mut model = AppModel::default();
+
+        model.active = Screen::Profiles;
+        update(&mut model, KeyCode::Char('c'), &store);
+        for ch in "Main".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+        update(&mut model, KeyCode::Char(' '), &store);
+        assert_eq!(model.store.default_profile_id.as_deref(), Some("profile-1"));
+
+        model.active = Screen::Repositories;
+        update(&mut model, KeyCode::Char('n'), &store);
+        for ch in "local".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Tab, &store);
+        for ch in sources_root.display().to_string().chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+        update(&mut model, KeyCode::Char('r'), &store);
+        update(&mut model, KeyCode::Char(' '), &store);
+
+        assert_eq!(model.store.profiles[0].skills, vec!["space-skill"]);
     }
 }

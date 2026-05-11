@@ -139,14 +139,14 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
 
     if let Some(modal) = model.modal {
         let text = match modal {
-            Modal::CreateProfile => format!("Create Profile\n\nName: {}", model.input),
-            Modal::EditProfile => format!("Edit Profile\n\nName: {}", model.input),
+            Modal::CreateProfile => format!("Create Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+            Modal::EditProfile => format!("Edit Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::DeleteProfileConfirm => "Delete selected profile? [Enter] confirm, [Esc] cancel".into(),
             Modal::AddSource => {
                 let active_name = if model.input_focus_secondary { "" } else { " <active>" };
                 let active_path = if model.input_focus_secondary { " <active>" } else { "" };
                 format!(
-                    "Add Local Source\n\nName{}: {}\nPath{}: {}\n\n[Tab] switch field",
+                    "Add Local Source\n\nName{}: {}\nPath{}: {}\n\n[Tab] switch field  [Enter] confirm  [Esc] cancel",
                     active_name, model.input, active_path, model.input_secondary
                 )
             }
@@ -157,8 +157,13 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
         );
     }
 
+    let footer = if model.modal.is_some() {
+        "[Enter] confirm  [Esc] cancel  [q] quit"
+    } else {
+        "Keyboard-first runtime. Empty states are explicit."
+    };
     frame.render_widget(
-        Paragraph::new("Keyboard-first runtime. Empty states are explicit.")
+        Paragraph::new(footer)
             .block(Block::default().title(model.status.clone()).borders(Borders::ALL)),
         chunks[2],
     );

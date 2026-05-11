@@ -96,6 +96,7 @@ fn add_selected_discovery_to_active_profile(model: &mut AppModel) {
 pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
     if model.modal.is_some() {
         match key {
+            KeyCode::Char('q') => model.quit = true,
             KeyCode::Esc => {
                 model.modal = None;
                 model.input.clear();

@@ -45,6 +45,7 @@ pub struct AppModel {
     pub discoveries: Vec<RuntimeDiscovery>,
     pub status: String,
     pub modal_error: String,
+    pub install_target: Option<(crate::domain::profile::Profile, String)>,
     pub quit: bool,
 }
 
@@ -74,6 +75,7 @@ impl Default for AppModel {
             discoveries: Vec::new(),
             status: "Ready".into(),
             modal_error: String::new(),
+            install_target: None,
             quit: false,
         }
     }

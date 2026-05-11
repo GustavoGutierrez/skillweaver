@@ -306,17 +306,11 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                                 return;
                             }
                         };
+                        model.modal = None;
                         model.modal_error.clear();
-                        match crate::services::install::execute_install(&profile, project_root, &model.store.sources) {
-                            Ok(mode) => {
-                                model.modal = None;
-                                model.input.clear();
-                                model.status = format!("Installed: {mode}");
-                            }
-                            Err(err) => {
-                                model.modal_error = format!("Install blocked: {err}");
-                            }
-                        }
+                        model.input.clear();
+                        model.status = "⏳ Installing...".into();
+                        model.install_target = Some((profile, path_str));
                     }
                     None => {}
                 }
@@ -496,6 +490,18 @@ pub fn run(mut terminal: DefaultTerminal) -> AppResult<()> {
         terminal.draw(|frame| crate::ui::render(frame, &model))?;
         if let Event::Key(k) = event::read()? {
             update(&mut model, k.code, &store);
+        }
+        if let Some((profile, target)) = model.install_target.take() {
+            terminal.draw(|frame| crate::ui::render(frame, &model))?;
+            let project_root = Path::new(&target);
+            match crate::services::install::execute_install(&profile, project_root, &model.store.sources) {
+                Ok(mode) => {
+                    model.status = format!("Installed: {mode}");
+                }
+                Err(err) => {
+                    model.status = format!("Install failed: {err}");
+                }
+            }
         }
     }
     Ok(())

@@ -150,6 +150,7 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             skills: Vec::new(),
                             rules: Vec::new(),
                             install_mode: InstallMode::Auto,
+                            source_url: None,
                         });
                         model.selected_profile = model.store.profiles.len() - 1;
                         model.store.default_profile_id = model.store.profiles.get(model.selected_profile).map(|p| p.id.clone());
@@ -350,6 +351,16 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             model.modal_error = "Enter a number".into();
                         }
                     }
+                    Some(Modal::EditSource) => {
+                        let url = model.input.trim().to_string();
+                        if let Some(profile) = selected_profile_mut(model) {
+                            profile.source_url = if url.is_empty() { None } else { Some(url) };
+                            model.modal = None;
+                            model.input.clear();
+                            save_model(model, store);
+                            model.status = "Source URL updated".into();
+                        }
+                    }
                     None => {}
                 }
             }
@@ -483,6 +494,12 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             model.status = "Type skill number to remove".into();
                         }
                     }
+                }
+                KeyCode::Char('u') => {
+                    let current_url = selected_profile(model).and_then(|p| p.source_url.clone());
+                    model.modal = Some(Modal::EditSource);
+                    model.input = current_url.unwrap_or_default();
+                    model.status = "Edit source URL".into();
                 }
                 KeyCode::Char('Z') => {
                     if let Some(profile) = selected_profile(model) {

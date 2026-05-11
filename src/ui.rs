@@ -114,9 +114,15 @@ fn render_profiles(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
             }
         }
         lines.push(Line::from(""));
+        if let Some(ref url) = profile.source_url {
+            lines.push(Line::from(Span::from(format!("Source: {url}")).dim()));
+        } else {
+            lines.push(Line::from(Span::from("Source: (uses global sources)").dim()));
+        }
+        lines.push(Line::from(""));
         lines.push(Line::from(Span::from("━".repeat(40)).dim()));
         lines.push(Line::from(Span::from("[c] Create  [e] Edit  [s] Add skill  [r] Add rule").bold()));
-        lines.push(Line::from(Span::from("[X] Remove skill  [Z] Remove rule  [d] Duplicate  [x] Delete").bold()));
+        lines.push(Line::from(Span::from("[X] Remove skill  [Z] Remove rule  [u] Source URL  [d] Duplicate  [x] Delete").bold()));
         lines.push(Line::from(Span::from("[i] Import  [o] Export  [Enter]/[Space] Default  [j/k] Move").dim()));
         lines
     } else {
@@ -272,6 +278,7 @@ fn render_modal(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppModel
                 .unwrap_or_default();
             format!("Remove Rule\n\n{}\n\nNumber to remove: {}\n[Enter] confirm  [Esc] cancel", rules, model.input)
         },
+        Modal::EditSource => format!("Edit Source URL\n\nZip base URL: {}\n\nExample: https://github.com/user/repo/raw/refs/heads/main/skills\nLeave empty to use global sources.\n\n[Enter] save  [Esc] cancel", model.input),
         Modal::InstallPath => format!("Install Profile\n\nTarget: {}\n\n[Enter] install  [Esc] cancel", model.input),
         Modal::AddSource => {
             let an = if model.input_focus_secondary { "" } else { " <active>" };

@@ -10,6 +10,8 @@ pub struct Profile {
     pub skills: Vec<String>,
     pub rules: Vec<String>,
     pub install_mode: InstallMode,
+    #[serde(default)]
+    pub source_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

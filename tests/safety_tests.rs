@@ -19,6 +19,7 @@ fn sample_profile(skills: Vec<&str>) -> Profile {
         skills: skills.into_iter().map(|s| s.to_string()).collect(),
         rules: vec!["rule".into()],
         install_mode: InstallMode::Auto,
+        source_url: None,
     }
 }
 
@@ -88,6 +89,7 @@ fn profile_json_persistence_roundtrip() {
             skills: vec![],
             rules: vec![],
             install_mode: skillweaver::domain::profile::InstallMode::Auto,
+            source_url: None,
         }],
         ..Default::default()
     };

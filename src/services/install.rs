@@ -111,7 +111,12 @@ pub fn execute_install(profile: &Profile, project_root: &Path, sources: &[Source
         let dest = skills_dir.join(skill);
         if dest.exists() { skipped += 1; continue; }
         let mut found = false;
-        for src in sources {
+        let effective_sources: Vec<SourceRegistration> = if let Some(ref url) = profile.source_url {
+            vec![SourceRegistration { name: profile.name.clone(), root: url.clone(), source_type: crate::domain::source::SourceType::Zip }]
+        } else {
+            sources.to_vec()
+        };
+        for src in &effective_sources {
             let url = format!("{}/{skill}.zip", src.root.trim_end_matches('/'));
             if download_skill(&url, skill, &dest).is_ok() { downloaded += 1; found = true; break; }
         }

@@ -20,6 +20,7 @@ pub enum Modal {
     AddRule,
     RemoveSkill,
     RemoveRule,
+    EditSource,
     InstallPath,
 }
 

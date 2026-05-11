@@ -67,8 +67,10 @@ fn cmd_install(args: &[String]) -> Result<()> {
         bail!("Target path does not exist: {target}");
     }
 
+    eprintln!("Installing profile '{}' ({} skills)...", profile.name, profile.skills.len());
     let mode = execute_install(profile, project_root, &data.sources)
-        .map_err(|e| color_eyre::eyre::eyre!("Install failed for '{}': {e}", profile.name))?;
+        .map_err(|e| color_eyre::eyre::eyre!("Install failed: {e}"))?;
+    eprintln!("\nDone: {mode}");
     println!("Installed profile '{}' into '{}' via {mode}", profile.name, target);
     println!("Skills: {}", profile.skills.join(", "));
     if !profile.rules.is_empty() {

@@ -271,7 +271,7 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddSkill => format!("Add Skill to Profile\n\nSkill name: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddRule => format!("Add Rule to Profile\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::InstallPath => format!("Install Profile\n\nTarget path: {}\n\nSkills will be downloaded, extracted, lockfile updated.\n\n[Enter] install here  [Esc] cancel", model.input),
+            Modal::InstallPath => format!("Install Profile\n\nTarget: {}\n\n[Enter] install  [Esc] cancel", model.input),
             Modal::AddSource => {
                 let an = if model.input_focus_secondary { "" } else { " <active>" };
                 let ap = if model.input_focus_secondary { " <active>" } else { "" };

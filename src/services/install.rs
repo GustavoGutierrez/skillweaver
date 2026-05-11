@@ -42,7 +42,6 @@ pub fn build_preview(profile: &Profile, _project_root: &Path) -> InstallPlan {
 }
 
 fn download_skill(url: &str, skill_name: &str, dest_dir: &Path) -> AppResult<()> {
-    eprintln!("  ⬇ downloading {skill_name}...");
     let response = ureq::get(url).call().map_err(|e| {
         AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("download failed for {skill_name}: {e}")))
     })?;
@@ -50,7 +49,6 @@ fn download_skill(url: &str, skill_name: &str, dest_dir: &Path) -> AppResult<()>
     let mut body = Vec::new();
     response.into_body().as_reader().read_to_end(&mut body)?;
 
-    eprintln!("  📦 extracting {skill_name}...");
     let tmp_dir = tempfile::tempdir().map_err(|e| {
         AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("tempdir failed for {skill_name}: {e}")))
     })?;
@@ -59,7 +57,6 @@ fn download_skill(url: &str, skill_name: &str, dest_dir: &Path) -> AppResult<()>
     crate::infra::archive::extract_zip_safely(&tmp_zip, tmp_dir.path())
         .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("extract failed for {skill_name}: {e}"))))?;
 
-    // ZIPs have skills/<name>/... — copy just <name>/ contents to dest
     let skill_inner = tmp_dir.path().join("skills").join(skill_name);
     if dest_dir.exists() {
         std::fs::remove_dir_all(dest_dir)
@@ -94,7 +91,6 @@ fn download_skill(url: &str, skill_name: &str, dest_dir: &Path) -> AppResult<()>
             }
         }
     }
-    eprintln!("  ✅ {skill_name} installed");
     Ok(())
 }
 
@@ -124,42 +120,34 @@ pub fn execute_install(profile: &Profile, project_root: &Path, sources: &[Source
     }
     std::fs::create_dir_all(&skills_dir)?;
 
-    let total = profile.skills.len();
     let mut downloaded = 0;
     let mut skipped = 0;
-    for (i, skill) in profile.skills.iter().enumerate() {
+    for skill in &profile.skills {
         let dest = skills_dir.join(skill);
         if dest.exists() {
             skipped += 1;
-            eprintln!("[{}/{}] ⏭ {skill} (already installed)", i + 1, total);
             continue;
         }
-        eprintln!("[{}/{}] {skill}", i + 1, total);
         let mut found = false;
         for src in sources {
             let url = format!("{}/{skill}.zip", src.root.trim_end_matches('/'));
-            match download_skill(&url, skill, &dest) {
-                Ok(()) => {
-                    downloaded += 1;
-                    found = true;
-                    break;
-                }
-                Err(e) => {
-                    eprintln!("  ⚠ source '{}' failed: {e}", src.name);
-                }
+            if download_skill(&url, skill, &dest).is_ok() {
+                downloaded += 1;
+                found = true;
+                break;
             }
         }
         if !found {
-            eprintln!("  ❌ could not download '{skill}' from any source");
+            return Err(AppError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("could not download '{skill}' from any source"),
+            )));
         }
     }
 
-    eprintln!("\n📝 writing AGENTS.md...");
     let managed = resolve_managed_file(project_root);
-    apply_managed_rules(&managed, &plan.rules_markdown)
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("AGENTS.md write failed: {e}"))))?;
+    apply_managed_rules(&managed, &plan.rules_markdown)?;
 
-    eprintln!("🔒 updating skills-lock.json...");
     let mut lock = load_lockfile(project_root)?;
     for s in &profile.skills {
         let skill_path = format!(".agents/skills/{s}/SKILL.md");
@@ -170,29 +158,24 @@ pub fn execute_install(profile: &Profile, project_root: &Path, sources: &[Source
             computed_hash: "pending".into(),
         });
     }
-    save_lockfile(project_root, &lock)
-        .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("lockfile write failed: {e}"))))?;
+    save_lockfile(project_root, &lock)?;
 
     let has_claude = project_root.join("CLAUDE.md").exists() || project_root.join(".claude").is_dir();
     if has_claude {
-        eprintln!("🔗 linking individual skills to .claude/skills/...");
         let claude_skills = project_root.join(".claude/skills");
-        std::fs::create_dir_all(&claude_skills)
-            .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!(".claude/skills create failed: {e}"))))?;
+        std::fs::create_dir_all(&claude_skills)?;
         for skill in &profile.skills {
             let src = skills_dir.join(skill);
             let dst = claude_skills.join(skill);
             if src.exists() && !dst.exists() {
-                eprintln!("  🔗 {skill}");
                 let abs_src = src.canonicalize().unwrap_or_else(|_| src.clone());
-                symlink_or_copy(&abs_src, &dst)
-                    .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("symlink {skill} failed: {e}"))))?;
+                symlink_or_copy(&abs_src, &dst)?;
             }
         }
     }
 
     let msg = if skipped > 0 {
-        format!("{downloaded} skill(s) installed, {skipped} already present")
+        format!("{downloaded} new, {skipped} already present")
     } else {
         format!("{downloaded} skill(s) installed")
     };

@@ -196,13 +196,16 @@ fn render_settings(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
 }
 
 fn render_about(frame: &mut Frame, area: ratatui::layout::Rect) {
-    let [mascot_area, info_area] = Layout::horizontal([Constraint::Length(22), Constraint::Fill(1)]).areas(area);
+    let mascot_height = crate::ascii::MASCOT.len() as u16;
+    let [mascot_area, info_area] = Layout::vertical([Constraint::Length(mascot_height), Constraint::Fill(1)]).areas(area);
 
     let mascot_lines: Vec<Line> = crate::ascii::MASCOT.iter().enumerate().map(|(i, line)| {
         let color = match i {
-            0 | 1 => ratatui::style::Color::Cyan,       // eyes and head
-            2 | 3 | 4 | 5 | 6 => ratatui::style::Color::Yellow, // body core
-            _ => ratatui::style::Color::DarkGray,        // legs
+            0..=2 => ratatui::style::Color::DarkGray,
+            3..=5 => ratatui::style::Color::Yellow,
+            6..=7 => ratatui::style::Color::Cyan,
+            8..=10 => ratatui::style::Color::Yellow,
+            _ => ratatui::style::Color::DarkGray,
         };
         Line::from(Span::styled(*line, ratatui::style::Style::default().fg(color)))
     }).collect();

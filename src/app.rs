@@ -306,11 +306,12 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                                 return;
                             }
                         };
+                        model.modal_error.clear();
                         match crate::services::install::execute_install(&profile, project_root, &model.store.sources) {
                             Ok(mode) => {
                                 model.modal = None;
                                 model.input.clear();
-                                model.status = format!("Installed via {mode} into {}", project_root.display());
+                                model.status = format!("Installed: {mode}");
                             }
                             Err(err) => {
                                 model.modal_error = format!("Install blocked: {err}");

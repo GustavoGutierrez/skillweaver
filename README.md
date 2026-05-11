@@ -4,58 +4,206 @@
 [![Ratatui](https://img.shields.io/badge/Ratatui-0.30-cyan)](https://ratatui.rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-SkillWeaver is now a real root Rust + Ratatui application in this repository.
+**Terminal-based package manager for AI agent skills and rules.**
 
-## What is implemented in this slice
+SkillWeaver lets you discover, preview, install, and share collections of AI agent skills across projects — without hunting them down one by one. Define a profile once, apply it everywhere.
 
-- Root Cargo project (`Cargo.toml`, `src/`, `tests/`)
-- Keyboard-first Ratatui runtime with real screens:
-  - Dashboard
-  - Profiles
-  - Repositories
-  - System Settings
-  - Help
-- Dashboard shows active/default profile and currently selected skills/rules
-- Profiles screen supports baseline keyboard flows:
-  - create (`c`)
-  - edit name (`e`)
-  - select default (`Enter`)
-  - select default (`Space`)
-  - duplicate (`d`)
-  - delete with confirmation (`x` + `Enter`)
-  - import profiles (`i`, from `./skillweaver-profiles.json`)
-  - export profiles (`o`, to `./skillweaver-profiles.json`)
-- Repositories screen supports baseline runtime flows:
-  - add local source (`n` modal with name/path)
-  - scan registered sources (`r`)
-  - view discovery results and add selected discovery to active profile (`a` or `Space`)
-- Explicit empty states across Dashboard/Profiles/Repositories/Settings/Help
-- Minimal but real modal/input interactions for creation/confirmation
-- Profile JSON persistence model and import/export services
-- Source scanning conventions restricted to:
-  - `skills/`
-  - `.agents/skills/`
-  - `.claude/skills/`
-- `SKILL.md` YAML frontmatter parsing (`name`, `description`, `triggers`)
-- Install preview with enforced blockers for traversal, unreadable metadata, target conflicts, and untrusted skill selections
-- Safe ZIP extraction with path traversal rejection
-- Symlink-first with copy fallback behavior
-- `skills-lock.json` handling for **skills only**
-- Managed block mutation in `AGENTS.md` / `CLAUDE.md` using exact markers:
-  - `<!-- BEGIN SKILLWEAVER RULES -->`
-  - `<!-- END SKILLWEAVER RULES -->`
-- Deterministic runtime transition tests for key modal and state flows
+---
 
-## Verified commands
-
-From repository root:
+## Quick Start
 
 ```bash
-cargo check
-cargo test
+# Build from source
+cargo build
+
+# Launch the TUI
+./target/debug/skillweaver
 ```
 
-## Notes
+---
 
-- This is an MVP slice focused on safety-critical install/mutation behavior plus usable runtime profile/source workflows.
-- UI text is in English and navigation is keyboard-first.
+## How to Use
+
+### Navigation
+
+| Key | Action |
+|-----|--------|
+| `1`–`5` or `h` | Switch screen |
+| `Tab` | Next screen |
+| `q` | Quit |
+| `j` / `↓` | Move selection down |
+| `k` / `↑` | Move selection up |
+| `Enter` or `Space` | Confirm or select default |
+
+The **active screen** is highlighted with `●` in the top bar — you always know where you are.
+
+---
+
+### Dashboard `[1]`
+
+View your profiles, see which skills and rules each one contains, and set a default.
+
+| Key | Action |
+|-----|--------|
+| `j` / `k` | Navigate profile list |
+| `Enter` or `Space` | Set selected profile as default |
+
+The right panel shows the currently selected profile's skills and rules.
+
+---
+
+### Profiles `[2]`
+
+Create, edit, and manage reusable skill bundles.
+
+| Key | Action |
+|-----|--------|
+| `c` | Create new profile (modal — type name, Enter to confirm) |
+| `e` | Edit profile name |
+| `s` | Add skill to profile (modal — type skill name, Enter) |
+| `r` | Add rule to profile (modal — type rule, Enter) |
+| `d` | Duplicate profile |
+| `x` | Delete profile (confirmation required) |
+| `i` | Import profiles from JSON file (modal — type file path) |
+| `o` | Export profiles to JSON file (modal — type file path) |
+
+**Importing pre-made profiles:**
+```bash
+# In the TUI, go to Profiles [2], press i, then type:
+profiles/skillweaver-profile-recommended.json
+```
+
+Pre-made profiles are in `profiles/`:
+- `skillweaver-profile-recommended.json` — 12 core skills (starter)
+- `skillweaver-profiles.json` — all 24 engineering skills
+- `skillweaver-profile-frontend.json` — frontend development
+- `skillweaver-profile-backend.json` — backend development
+- `skillweaver-profile-devops.json` — DevOps & platform
+- `skillweaver-profile-product.json` — product management
+- `skillweaver-profile-architecture.json` — solution architecture
+
+You can import multiple profiles — they merge, never overwrite.
+
+---
+
+### Repositories `[3]`
+
+Register local skill directories, scan for skills, and add them to your active profile.
+
+| Key | Action |
+|-----|--------|
+| `n` | Add local source (modal — type name, Tab to path, Enter) |
+| `r` | Scan registered sources for discoverable skills |
+| `a` or `Space` | Add selected discovery to the active profile |
+| `j` / `k` | Move between discovered skills |
+
+The source path must be a **local directory** containing a `skills/`, `.agents/skills/`, or `.claude/skills/` subdirectory with `SKILL.md` files.
+
+**Example:** register the repo's own bundled skills:
+```
+Name: Bundled Skills
+Path: /path/to/skillweaver/.agents/skills
+```
+
+---
+
+### System Settings `[4]`
+
+View runtime state — how many profiles and sources are stored, which profile is the default.
+
+Settings are persisted automatically to `~/.config/skillweaver/profiles.json`.
+
+---
+
+### Help `[5]`
+
+Full keyboard reference with all keybindings.
+
+---
+
+## Install and Safety Features
+
+The following features are implemented in the backend and tested, with TUI wiring in progress:
+
+| Feature | Status |
+|---------|--------|
+| Install preview with blocker enforcement | ✅ Backend + tests |
+| Safe ZIP extraction (path traversal rejection) | ✅ Backend + tests |
+| Symlink-first with copy fallback | ✅ Backend + tests |
+| `skills-lock.json` generation (skills only) | ✅ Backend + tests |
+| Managed block mutation in `AGENTS.md` / `CLAUDE.md` | ✅ Backend + tests |
+| `SKILL.md` YAML frontmatter parsing | ✅ Backend + tests |
+
+**Managed block markers** used in target Markdown files:
+```markdown
+<!-- BEGIN SKILLWEAVER RULES -->
+<!-- END SKILLWEAVER RULES -->
+```
+
+---
+
+## Profile JSON Format
+
+Profiles are stored and imported as JSON. Example:
+
+```json
+{
+  "schema_version": 1,
+  "default_profile_id": "my-profile",
+  "profiles": [
+    {
+      "id": "my-profile",
+      "name": "My Profile",
+      "description": "Optional description",
+      "skills": ["context-engineer", "prd-writer", "spec-writer"],
+      "rules": ["use-conventional-commits"],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}
+```
+
+- `skills` — list of skill names (download URL = `source.root + "/" + skill-name + ".zip"`)
+- `rules` — list of rule identifiers
+- `sources` — where skills come from (`source_type`: `local`, `zip`, or `git`)
+- `install_mode` — `auto`, `symlink`, or `copy`
+
+---
+
+## Verified Commands
+
+```bash
+cargo check     # Compilation check
+cargo test      # 22 tests (6 app state + 16 safety/install)
+cargo build     # Build binary at target/debug/skillweaver
+```
+
+---
+
+## Tech Stack
+
+| Layer | Crate |
+|-------|-------|
+| TUI rendering | `ratatui` 0.30, `crossterm` 0.29 |
+| Serialization | `serde`, `serde_json`, `serde_yaml` |
+| ZIP handling | `zip` 4 |
+| Error handling | `color-eyre`, `thiserror` |
+| System paths | `dirs` 6 |
+| Testing | `tempfile` |
+
+---
+
+## License
+
+MIT — see [LICENSE](./LICENSE).
+
+## Author
+
+**Ing. Gustavo Gutiérrez** — [GitHub](https://github.com/GustavoGutierrez)

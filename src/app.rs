@@ -320,6 +320,22 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
         KeyCode::Char('4') => model.active = Screen::SystemSettings,
         KeyCode::Char('5') | KeyCode::Char('h') => model.active = Screen::Help,
         _ => match model.active {
+            Screen::Dashboard => match key {
+                KeyCode::Down | KeyCode::Char('j') => {
+                    if !model.store.profiles.is_empty() {
+                        model.selected_profile = (model.selected_profile + 1).min(model.store.profiles.len() - 1);
+                    }
+                }
+                KeyCode::Up | KeyCode::Char('k') => {
+                    model.selected_profile = model.selected_profile.saturating_sub(1);
+                }
+                KeyCode::Enter | KeyCode::Char(' ') => {
+                    model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
+                    save_model(model, store);
+                    model.status = "Default profile selected".into();
+                }
+                _ => {}
+            },
             Screen::Profiles => match key {
                 KeyCode::Down | KeyCode::Char('j') => {
                     if !model.store.profiles.is_empty() {

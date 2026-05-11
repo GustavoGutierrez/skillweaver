@@ -70,6 +70,22 @@ fn save_model(model: &mut AppModel, store: &ProfileStore) {
     }
 }
 
+fn merge_imported_data(existing: &mut ProfileStoreData, imported: ProfileStoreData) {
+    for profile in imported.profiles {
+        if !existing.profiles.iter().any(|p| p.id == profile.id) {
+            existing.profiles.push(profile);
+        }
+    }
+    for source in imported.sources {
+        if !existing.sources.iter().any(|s| s.name == source.name) {
+            existing.sources.push(source);
+        }
+    }
+    if existing.default_profile_id.is_none() {
+        existing.default_profile_id = imported.default_profile_id;
+    }
+}
+
 fn selected_profile_mut(model: &mut AppModel) -> Option<&mut Profile> {
     model.store.profiles.get_mut(model.selected_profile)
 }
@@ -204,13 +220,15 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         let path = Path::new(&path_str);
                         match import_profiles(path) {
                             Ok(data) => {
-                                model.store = data;
+                                let before = model.store.profiles.len();
+                                merge_imported_data(&mut model.store, data);
+                                let added = model.store.profiles.len() - before;
                                 model.modal = None;
                                 model.input.clear();
                                 normalize_selection(model);
                                 refresh_discoveries(model);
                                 save_model(model, store);
-                                model.status = format!("Imported from {}", path.display());
+                                model.status = format!("Imported {} profile(s) from {}", added, path.display());
                             }
                             Err(err) => {
                                 model.modal_error = format!("Import failed: {err}");

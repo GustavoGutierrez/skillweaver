@@ -18,6 +18,8 @@ pub enum Modal {
     ExportPath,
     AddSkill,
     AddRule,
+    RemoveSkill,
+    RemoveRule,
     InstallPath,
 }
 

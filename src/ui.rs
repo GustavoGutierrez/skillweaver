@@ -116,8 +116,8 @@ fn render_profiles(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
         lines.push(Line::from(""));
         lines.push(Line::from(Span::from("━".repeat(40)).dim()));
         lines.push(Line::from(Span::from("[c] Create  [e] Edit  [s] Add skill  [r] Add rule").bold()));
-        lines.push(Line::from(Span::from("[d] Duplicate  [x] Delete  [i] Import  [o] Export").bold()));
-        lines.push(Line::from(Span::from("[Enter]/[Space] Set default  [j/k] Move").dim()));
+        lines.push(Line::from(Span::from("[X] Remove skill  [Z] Remove rule  [d] Duplicate  [x] Delete").bold()));
+        lines.push(Line::from(Span::from("[i] Import  [o] Export  [Enter]/[Space] Default  [j/k] Move").dim()));
         lines
     } else {
         vec![Line::from(Span::from("No profile selected.").dim())]
@@ -234,7 +234,7 @@ fn render_help(frame: &mut Frame, area: ratatui::layout::Rect) {
         Line::from(Span::from("  [j/k] Navigate profiles  [Enter]/[Space] Set default  [i] Install profile into project").dim()),
         Line::from(""),
         Line::from(Span::from("Profiles [2]").bold().green()),
-        Line::from(Span::from("  [c] Create  [e] Edit name  [s] Add skill  [r] Add rule  [d] Duplicate  [x] Delete  [i] Import  [o] Export").dim()),
+        Line::from(Span::from("  [c] Create  [e] Edit name  [s] Add skill  [r] Add rule  [X] Remove skill  [Z] Remove rule").dim()),
         Line::from(""),
         Line::from(Span::from("Repositories [3]").bold().green()),
         Line::from(Span::from("  [n] Add source  [r] Scan  [a]/[Space] Add to profile").dim()),
@@ -260,6 +260,18 @@ fn render_modal(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppModel
         Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
         Modal::AddSkill => format!("Add Skill\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
         Modal::AddRule => format!("Add Rule\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::RemoveSkill => {
+            let skills: String = model.store.profiles.get(model.selected_profile)
+                .map(|p| p.skills.iter().enumerate().map(|(i, s)| format!("  {}. {}", i+1, s)).collect::<Vec<_>>().join("\n"))
+                .unwrap_or_default();
+            format!("Remove Skill\n\n{}\n\nNumber to remove: {}\n[Enter] confirm  [Esc] cancel", skills, model.input)
+        },
+        Modal::RemoveRule => {
+            let rules: String = model.store.profiles.get(model.selected_profile)
+                .map(|p| p.rules.iter().enumerate().map(|(i, r)| format!("  {}. {}", i+1, r)).collect::<Vec<_>>().join("\n"))
+                .unwrap_or_default();
+            format!("Remove Rule\n\n{}\n\nNumber to remove: {}\n[Enter] confirm  [Esc] cancel", rules, model.input)
+        },
         Modal::InstallPath => format!("Install Profile\n\nTarget: {}\n\n[Enter] install  [Esc] cancel", model.input),
         Modal::AddSource => {
             let an = if model.input_focus_secondary { "" } else { " <active>" };

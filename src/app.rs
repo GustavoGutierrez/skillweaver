@@ -312,6 +312,44 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         model.status = "⏳ Installing...".into();
                         model.install_target = Some((profile, path_str));
                     }
+                    Some(Modal::RemoveSkill) => {
+                        let input = model.input.trim().to_string();
+                        if let Ok(idx) = input.parse::<usize>() {
+                            let idx = idx.saturating_sub(1); // 1-based input
+                            if let Some(profile) = selected_profile_mut(model) {
+                                if idx < profile.skills.len() {
+                                    let removed = profile.skills.remove(idx);
+                                    model.modal = None;
+                                    model.input.clear();
+                                    save_model(model, store);
+                                    model.status = format!("Removed skill: {removed}");
+                                } else {
+                                    model.modal_error = "Invalid number".into();
+                                }
+                            }
+                        } else {
+                            model.modal_error = "Enter a number".into();
+                        }
+                    }
+                    Some(Modal::RemoveRule) => {
+                        let input = model.input.trim().to_string();
+                        if let Ok(idx) = input.parse::<usize>() {
+                            let idx = idx.saturating_sub(1);
+                            if let Some(profile) = selected_profile_mut(model) {
+                                if idx < profile.rules.len() {
+                                    let removed = profile.rules.remove(idx);
+                                    model.modal = None;
+                                    model.input.clear();
+                                    save_model(model, store);
+                                    model.status = format!("Removed rule: {removed}");
+                                } else {
+                                    model.modal_error = "Invalid number".into();
+                                }
+                            }
+                        } else {
+                            model.modal_error = "Enter a number".into();
+                        }
+                    }
                     None => {}
                 }
             }
@@ -417,9 +455,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                 }
                 KeyCode::Char('i') => {
                     model.modal = Some(Modal::ImportPath);
-                    model.input.clear();
+                    model.input = "./skillweaver-profiles.json".to_string();
                     model.modal_error.clear();
-                    model.status = "Enter import file path".into();
+                    model.status = "Import profiles".into();
                 }
                 KeyCode::Char('s') => {
                     if selected_profile(model).is_some() {
@@ -437,11 +475,29 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         model.status = "Add rule to profile".into();
                     }
                 }
+                KeyCode::Char('X') => {
+                    if let Some(profile) = selected_profile(model) {
+                        if !profile.skills.is_empty() {
+                            model.modal = Some(Modal::RemoveSkill);
+                            model.input.clear();
+                            model.status = "Type skill number to remove".into();
+                        }
+                    }
+                }
+                KeyCode::Char('Z') => {
+                    if let Some(profile) = selected_profile(model) {
+                        if !profile.rules.is_empty() {
+                            model.modal = Some(Modal::RemoveRule);
+                            model.input.clear();
+                            model.status = "Type rule number to remove".into();
+                        }
+                    }
+                }
                 KeyCode::Char('o') => {
                     model.modal = Some(Modal::ExportPath);
-                    model.input.clear();
+                    model.input = "./skillweaver-profiles.json".to_string();
                     model.modal_error.clear();
-                    model.status = "Enter export file path".into();
+                    model.status = "Export profiles".into();
                 }
                 _ => {}
             },
@@ -633,22 +689,16 @@ mod tests {
         }
         update(&mut model, KeyCode::Enter, &store);
 
-        // Export via modal
+        // Export via modal (uses default path)
         update(&mut model, KeyCode::Char('o'), &store);
-        for ch in "exported.json".chars() {
-            update(&mut model, KeyCode::Char(ch), &store);
-        }
         update(&mut model, KeyCode::Enter, &store);
 
         // Clear state
         model.store.profiles.clear();
         model.store.default_profile_id = None;
 
-        // Import via modal
+        // Import via modal (uses default path)
         update(&mut model, KeyCode::Char('i'), &store);
-        for ch in "exported.json".chars() {
-            update(&mut model, KeyCode::Char(ch), &store);
-        }
         update(&mut model, KeyCode::Enter, &store);
 
         assert_eq!(model.store.profiles.len(), 1);

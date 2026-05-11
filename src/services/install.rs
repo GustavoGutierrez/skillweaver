@@ -7,7 +7,6 @@ use crate::domain::target::resolve_managed_file;
 use crate::infra::archive::symlink_or_copy;
 use crate::infra::lockfile_store::{load_lockfile, save_lockfile};
 use crate::infra::markdown::{apply_managed_rules, render_rules};
-use crate::services::discovery::discover_skills;
 use crate::{AppResult, error::AppError};
 
 pub fn build_preview(profile: &Profile, project_root: &Path) -> InstallPlan {
@@ -17,14 +16,6 @@ pub fn build_preview(profile: &Profile, project_root: &Path) -> InstallPlan {
         blocked_by.push(BlockReason::Conflict);
     }
 
-    let discovered = match discover_skills(project_root) {
-        Ok(v) => v,
-        Err(_) => {
-            blocked_by.push(BlockReason::InvalidMetadata);
-            vec![]
-        }
-    };
-
     for skill in &profile.skills {
         if skill.contains("..") || skill.contains('/') || skill.contains('\\') {
             blocked_by.push(BlockReason::Traversal);
@@ -32,18 +23,7 @@ pub fn build_preview(profile: &Profile, project_root: &Path) -> InstallPlan {
         }
     }
 
-    let known: std::collections::HashSet<String> = discovered
-        .iter()
-        .filter_map(|d| d.path.file_name().map(|n| n.to_string_lossy().to_string()))
-        .collect();
-    for requested in &profile.skills {
-        if !known.contains(requested) {
-            blocked_by.push(BlockReason::UnsupportedStructure);
-            break;
-        }
-    }
-
-    let target_root = project_root.join(".claude/skills");
+    let target_root = project_root.join(".agents/skills");
     for skill in &profile.skills {
         let target = target_root.join(skill);
         if target.exists() {

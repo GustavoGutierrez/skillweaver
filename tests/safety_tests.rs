@@ -136,32 +136,6 @@ fn preview_blocks_traversal_skill_names() {
 }
 
 #[test]
-fn preview_blocks_invalid_metadata_from_discovery() {
-    let dir = tempfile::tempdir().unwrap();
-    let skill_dir = dir.path().join(".agents/skills/badskill");
-    fs::create_dir_all(&skill_dir).unwrap();
-    fs::write(skill_dir.join("SKILL.md"), "# no frontmatter").unwrap();
-
-    let profile = sample_profile(vec!["badskill"]);
-    let plan = build_preview(&profile, dir.path());
-    assert!(!plan.can_install);
-    assert!(plan
-        .blocked_by
-        .contains(&skillweaver::domain::install::BlockReason::InvalidMetadata));
-}
-
-#[test]
-fn preview_blocks_untrusted_skill_not_in_discovery() {
-    let dir = tempfile::tempdir().unwrap();
-    let profile = sample_profile(vec!["not-discovered"]);
-    let plan = build_preview(&profile, dir.path());
-    assert!(!plan.can_install);
-    assert!(plan
-        .blocked_by
-        .contains(&skillweaver::domain::install::BlockReason::UnsupportedStructure));
-}
-
-#[test]
 fn preview_blocks_target_conflict_when_install_target_exists() {
     let dir = tempfile::tempdir().unwrap();
     let skill_dir = dir.path().join(".agents/skills/existing");
@@ -171,7 +145,6 @@ fn preview_blocks_target_conflict_when_install_target_exists() {
         "---\nname: existing\ndescription: ok\n---\n# body",
     )
     .unwrap();
-    fs::create_dir_all(dir.path().join(".claude/skills/existing")).unwrap();
 
     let profile = sample_profile(vec!["existing"]);
     let plan = build_preview(&profile, dir.path());

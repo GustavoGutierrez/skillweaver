@@ -289,6 +289,35 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             model.status = "Rule added to profile".into();
                         }
                     }
+                    Some(Modal::InstallPath) => {
+                        let path_str = model.input.trim().to_string();
+                        if path_str.is_empty() {
+                            model.modal_error = "Project path is required".into();
+                            return;
+                        }
+                        let project_root = Path::new(&path_str);
+                        if !project_root.exists() {
+                            model.modal_error = format!("Path does not exist: {path_str}");
+                            return;
+                        }
+                        let profile = match selected_profile(model) {
+                            Some(p) => p.clone(),
+                            None => {
+                                model.modal_error = "No profile selected".into();
+                                return;
+                            }
+                        };
+                        match crate::services::install::execute_install(&profile, project_root) {
+                            Ok(mode) => {
+                                model.modal = None;
+                                model.input.clear();
+                                model.status = format!("Installed via {mode} into {}", project_root.display());
+                            }
+                            Err(err) => {
+                                model.modal_error = format!("Install blocked: {err}");
+                            }
+                        }
+                    }
                     None => {}
                 }
             }
@@ -333,6 +362,14 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
                     save_model(model, store);
                     model.status = "Default profile selected".into();
+                }
+                KeyCode::Char('i') => {
+                    if selected_profile(model).is_some() {
+                        model.modal = Some(Modal::InstallPath);
+                        model.input.clear();
+                        model.modal_error.clear();
+                        model.status = "Enter target project path to install".into();
+                    }
                 }
                 _ => {}
             },

@@ -56,7 +56,7 @@ fn render_dashboard(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppM
             }
         }
         lines.push(Line::from(""));
-        lines.push(Line::from(Span::from("[2] Profiles  [3] Repositories  [q] Quit").dim()));
+        lines.push(Line::from(Span::from("[i] Install  [2] Profiles  [3] Repositories  [q] Quit").dim()));
         lines
     } else {
         vec![
@@ -202,6 +202,9 @@ fn render_help(frame: &mut Frame, area: ratatui::layout::Rect) {
         Line::from(Span::from("Navigation").bold().green()),
         Line::from(Span::from("  [1]-[5] or [h]  Switch screen  |  [Tab]  Next screen  |  [q]  Quit").dim()),
         Line::from(""),
+        Line::from(Span::from("Dashboard [1]").bold().green()),
+        Line::from(Span::from("  [j/k] Navigate profiles  [Enter]/[Space] Set default  [i] Install profile into project").dim()),
+        Line::from(""),
         Line::from(Span::from("Profiles [2]").bold().green()),
         Line::from(Span::from("  [c] Create  [e] Edit name  [s] Add skill  [r] Add rule  [d] Duplicate  [x] Delete  [i] Import  [o] Export").dim()),
         Line::from(""),
@@ -268,6 +271,7 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddSkill => format!("Add Skill to Profile\n\nSkill name: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddRule => format!("Add Rule to Profile\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+            Modal::InstallPath => format!("Install Profile\n\nTarget project path: {}\n\nSkills will be symlinked/copied, lockfile updated, rules applied.\n\n[Enter] install  [Esc] cancel", model.input),
             Modal::AddSource => {
                 let an = if model.input_focus_secondary { "" } else { " <active>" };
                 let ap = if model.input_focus_secondary { " <active>" } else { "" };

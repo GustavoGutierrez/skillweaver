@@ -195,12 +195,32 @@ fn render_settings(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
     );
 }
 
+fn render_about(frame: &mut Frame, area: ratatui::layout::Rect) {
+    let about = vec![
+        Line::from(Span::from("SkillWeaver").cyan().bold()),
+        Line::from("Terminal-based package manager for AI agent skills and rules."),
+        Line::from(""),
+        Line::from(Span::from("Author").bold().green()),
+        Line::from("  Gustavo Gutiérrez — Bogotá, Colombia"),
+        Line::from(Span::from("  https://www.linkedin.com/in/gustavo-gutierrez-mercado").dim()),
+        Line::from(""),
+        Line::from(Span::from("☕ Support").bold().yellow()),
+        Line::from("  If this project has been helpful,"),
+        Line::from("  consider supporting its development:"),
+        Line::from(Span::from("  https://ko-fi.com/gustavogutierrezmercado").cyan()),
+    ];
+    frame.render_widget(
+        Paragraph::new(about).block(Block::default().title(" About ").borders(Borders::ALL).cyan()),
+        area,
+    );
+}
+
 fn render_help(frame: &mut Frame, area: ratatui::layout::Rect) {
     let help = vec![
         Line::from(Span::from("Keyboard reference").bold().cyan()),
         Line::from(""),
         Line::from(Span::from("Navigation").bold().green()),
-        Line::from(Span::from("  [1]-[5] or [h]  Switch screen  |  [Tab]  Next screen  |  [q]  Quit").dim()),
+        Line::from(Span::from("  [1]-[6] or [h]  Switch screen  |  [Tab]  Next screen  |  [q]  Quit").dim()),
         Line::from(""),
         Line::from(Span::from("Dashboard [1]").bold().green()),
         Line::from(Span::from("  [j/k] Navigate profiles  [Enter]/[Space] Set default  [i] Install profile into project").dim()),
@@ -213,6 +233,8 @@ fn render_help(frame: &mut Frame, area: ratatui::layout::Rect) {
         Line::from(""),
         Line::from(Span::from("Modals").bold().yellow()),
         Line::from(Span::from("  Type text  [Backspace] erase  [Tab] switch field  [Enter] confirm  [Esc] cancel  [q] quit").dim()),
+        Line::from(""),
+        Line::from(Span::from("[5] About  —  author, links, support").dim()),
     ];
     frame.render_widget(
         Paragraph::new(help).block(Block::default().title(" Help ").borders(Borders::ALL).cyan()),
@@ -257,14 +279,10 @@ fn tab_label(screen: Screen, active: Screen, name: &str, num: usize) -> Span<'st
 }
 
 pub fn render(frame: &mut Frame, model: &AppModel) {
-    let chunks = Layout::vertical([Constraint::Length(5), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
+    let chunks = Layout::vertical([Constraint::Length(3), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
 
     let header = vec![
-        Line::from(vec![
-            Span::from(" SkillWeaver v0.1.0 ").cyan().bold(),
-            Span::from("—".repeat(20)).dim(),
-            Span::from(" Gustavo Gutiérrez — Bogotá, Colombia ").dim(),
-        ]),
+        Line::from(Span::from(" SkillWeaver v0.1.0 ").cyan().bold()),
         Line::from(vec![
             tab_label(Screen::Dashboard, model.active, "Dashboard", 1),
             Span::from(" │ ").dim(),
@@ -274,9 +292,10 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Span::from(" │ ").dim(),
             tab_label(Screen::SystemSettings, model.active, "Settings", 4),
             Span::from(" │ ").dim(),
-            tab_label(Screen::Help, model.active, "Help", 5),
+            tab_label(Screen::About, model.active, "About", 5),
+            Span::from(" │ ").dim(),
+            tab_label(Screen::Help, model.active, "Help", 6),
         ]),
-        Line::from(Span::from("─".repeat(80)).dim()),
     ];
     frame.render_widget(Paragraph::new(header).block(Block::default().borders(Borders::ALL)), chunks[0]);
 
@@ -288,6 +307,7 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Screen::Profiles => render_profiles(frame, chunks[1], model),
             Screen::Repositories => render_repositories(frame, chunks[1], model),
             Screen::SystemSettings => render_settings(frame, chunks[1], model),
+            Screen::About => render_about(frame, chunks[1]),
             Screen::Help => render_help(frame, chunks[1]),
         }
     }

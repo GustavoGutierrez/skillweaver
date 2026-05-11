@@ -4,6 +4,7 @@ pub enum Screen {
     Profiles,
     Repositories,
     SystemSettings,
+    About,
     Help,
 }
 
@@ -26,7 +27,8 @@ impl Screen {
             Screen::Dashboard => Screen::Profiles,
             Screen::Profiles => Screen::Repositories,
             Screen::Repositories => Screen::SystemSettings,
-            Screen::SystemSettings => Screen::Help,
+            Screen::SystemSettings => Screen::About,
+            Screen::About => Screen::Help,
             Screen::Help => Screen::Dashboard,
         }
     }

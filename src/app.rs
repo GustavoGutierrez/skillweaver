@@ -341,7 +341,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
         KeyCode::Char('2') => model.active = Screen::Profiles,
         KeyCode::Char('3') => model.active = Screen::Repositories,
         KeyCode::Char('4') => model.active = Screen::SystemSettings,
-        KeyCode::Char('5') | KeyCode::Char('h') => model.active = Screen::Help,
+        KeyCode::Char('5') => model.active = Screen::About,
+        KeyCode::Char('6') | KeyCode::Char('h') => model.active = Screen::Help,
         _ => match model.active {
             Screen::Dashboard => match key {
                 KeyCode::Down | KeyCode::Char('j') => {

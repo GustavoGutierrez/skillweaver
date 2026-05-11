@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          cp target/release/skillweaver dist/
+          cd dist && tar czf ../skillweaver-x86_64-unknown-linux-gnu.tar.gz skillweaver
+          sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz > ../skillweaver-x86_64-unknown-linux-gnu.tar.gz.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: skillweaver-linux
+          path: skillweaver-x86_64-unknown-linux-gnu.tar.gz*
+
+  release:
+    needs: build-linux
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: skillweaver-linux
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: skillweaver-x86_64-unknown-linux-gnu.tar.gz*
+          generate_release_notes: true

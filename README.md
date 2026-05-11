@@ -6,6 +6,7 @@
 
 [![Rust](https://img.shields.io/badge/Rust-2024_edition-orange?logo=rust)](https://www.rust-lang.org/)
 [![Ratatui](https://img.shields.io/badge/Ratatui-0.30-cyan)](https://ratatui.rs/)
+[![CI](https://github.com/GustavoGutierrez/skillweaver/actions/workflows/ci.yml/badge.svg)](https://github.com/GustavoGutierrez/skillweaver/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Terminal-based package manager for AI agent skills and rules.**
@@ -14,23 +15,48 @@ SkillWeaver lets you discover, preview, install, and share collections of AI age
 
 ---
 
+## Install
+
+### Homebrew (Linux)
+
+```bash
+brew tap GustavoGutierrez/skillweaver https://github.com/GustavoGutierrez/skillweaver
+brew install skillweaver
+```
+
+To update:
+
+```bash
+brew upgrade skillweaver
+```
+
+> **Note:** The formula downloads a pre-built binary from GitHub Releases. Linux (x86_64) is supported. After the first release, update the SHA256 in `Formula/skillweaver.rb`.
+
+### Build from Source
+
+```bash
+git clone https://github.com/GustavoGutierrez/skillweaver.git
+cd skillweaver
+cargo build --release
+./target/release/skillweaver
+```
+
+---
+
 ## Quick Start
 
 ```bash
-# Build from source
-cargo build
-
 # CLI mode — install a profile directly (auto-detects current directory)
-./target/debug/skillweaver install "Recommended Starter"
+skillweaver install "Recommended Starter"
 
 # CLI mode — list available profiles
-./target/debug/skillweaver list
+skillweaver list
 
 # CLI mode — import profiles from JSON
-./target/debug/skillweaver import profiles/skillweaver-profile-recommended.json
+skillweaver import profiles/skillweaver-profile-recommended.json
 
 # TUI mode — interactive terminal interface (no arguments)
-./target/debug/skillweaver
+skillweaver
 ```
 
 ### CLI Commands
@@ -222,9 +248,16 @@ Profiles are stored and imported as JSON. Example:
 
 ```bash
 cargo check     # Compilation check
-cargo test      # 22 tests (6 app state + 16 safety/install)
+cargo test      # 20 tests (6 app state + 14 safety/install)
 cargo build     # Build binary at target/debug/skillweaver
 ```
+
+## Releasing
+
+1. Tag the release: `git tag v0.0.1 && git push origin v0.0.1`
+2. GitHub Actions builds and attaches the binary to the release
+3. Update SHA256 in `Formula/skillweaver.rb`: `sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz`
+4. Commit the updated formula and push
 
 ---
 

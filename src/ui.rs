@@ -309,7 +309,7 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
     let chunks = Layout::vertical([Constraint::Length(4), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
 
     let header = vec![
-        Line::from(Span::from(" SkillWeaver v0.1.0 ").cyan().bold()),
+        Line::from(Span::from(" SkillWeaver v0.0.1 ").cyan().bold()),
         Line::from(vec![
             tab_label(Screen::Dashboard, model.active, "Dashboard", 1),
             Span::from(" │ ").dim(),

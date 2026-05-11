@@ -196,22 +196,36 @@ fn render_settings(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
 }
 
 fn render_about(frame: &mut Frame, area: ratatui::layout::Rect) {
+    let [mascot_area, info_area] = Layout::horizontal([Constraint::Length(14), Constraint::Fill(1)]).areas(area);
+
+    let mascot_lines: Vec<Line> = crate::ascii::MASCOT.iter().enumerate().map(|(i, line)| {
+        let color = match i {
+            0..=1 => ratatui::style::Color::DarkGray,
+            2..=3 => ratatui::style::Color::Cyan,
+            4..=5 => ratatui::style::Color::DarkGray,
+            6..=7 => ratatui::style::Color::Cyan,
+            _ => ratatui::style::Color::DarkGray,
+        };
+        Line::from(Span::styled(*line, ratatui::style::Style::default().fg(color)))
+    }).collect();
+    frame.render_widget(Paragraph::new(mascot_lines), mascot_area);
+
     let about = vec![
         Line::from(Span::from("SkillWeaver").cyan().bold()),
-        Line::from("Terminal-based package manager for AI agent skills and rules."),
+        Line::from("Package manager for AI agent skills."),
         Line::from(""),
         Line::from(Span::from("Author").bold().green()),
         Line::from("  Gustavo Gutiérrez — Bogotá, Colombia"),
-        Line::from(Span::from("  https://www.linkedin.com/in/gustavo-gutierrez-mercado").dim()),
+        Line::from(Span::from("  linkedin.com/in/gustavo-gutierrez-mercado").dim()),
         Line::from(""),
         Line::from(Span::from("☕ Support").bold().yellow()),
         Line::from("  If this project has been helpful,"),
         Line::from("  consider supporting its development:"),
-        Line::from(Span::from("  https://ko-fi.com/gustavogutierrezmercado").cyan()),
+        Line::from(Span::from("  ko-fi.com/gustavogutierrezmercado").cyan()),
     ];
     frame.render_widget(
         Paragraph::new(about).block(Block::default().title(" About ").borders(Borders::ALL).cyan()),
-        area,
+        info_area,
     );
 }
 

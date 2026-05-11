@@ -1,4 +1,5 @@
 pub mod app;
+pub mod ascii;
 pub mod domain;
 pub mod infra;
 pub mod model;

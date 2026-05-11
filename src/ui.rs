@@ -279,7 +279,7 @@ fn tab_label(screen: Screen, active: Screen, name: &str, num: usize) -> Span<'st
 }
 
 pub fn render(frame: &mut Frame, model: &AppModel) {
-    let chunks = Layout::vertical([Constraint::Length(3), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
+    let chunks = Layout::vertical([Constraint::Length(4), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
 
     let header = vec![
         Line::from(Span::from(" SkillWeaver v0.1.0 ").cyan().bold()),

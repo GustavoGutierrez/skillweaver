@@ -327,6 +327,13 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Span::from("[q] quit").dim(),
             Span::from(format!("  — {}", model.status)).dim(),
         ])
+    } else if model.status.starts_with("⏳") {
+        Line::from(vec![
+            Span::from(format!("{} ", model.spinner_char())).cyan(),
+            Span::from(model.status.clone()).dim(),
+            Span::from("  ").dim(),
+            Span::from("[q] quit").dim(),
+        ])
     } else {
         Line::from(vec![
             Span::from(model.status.clone()),

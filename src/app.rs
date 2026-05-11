@@ -487,22 +487,37 @@ pub fn run(mut terminal: DefaultTerminal) -> AppResult<()> {
     refresh_discoveries(&mut model);
     normalize_selection(&mut model);
 
+    let mut install_handle: Option<std::thread::JoinHandle<Result<String, crate::error::AppError>>> = None;
+
     while !model.quit {
+        model.on_tick();
         terminal.draw(|frame| crate::ui::render(frame, &model))?;
-        if let Event::Key(k) = event::read()? {
-            update(&mut model, k.code, &store);
-        }
-        if let Some((profile, target)) = model.install_target.take() {
-            terminal.draw(|frame| crate::ui::render(frame, &model))?;
-            let project_root = Path::new(&target);
-            match crate::services::install::execute_install(&profile, project_root, &model.store.sources) {
-                Ok(mode) => {
-                    model.status = format!("Installed: {mode}");
+
+        if install_handle.is_some() {
+            if install_handle.as_ref().unwrap().is_finished() {
+                let result = install_handle.take().unwrap().join().unwrap();
+                match result {
+                    Ok(msg) => model.status = format!("Installed: {msg}"),
+                    Err(e) => model.status = format!("Install failed: {e}"),
                 }
-                Err(err) => {
-                    model.status = format!("Install failed: {err}");
-                }
+                continue;
             }
+            // still installing — skip key handling
+            std::thread::sleep(std::time::Duration::from_millis(80));
+            continue;
+        }
+
+        if crossterm::event::poll(std::time::Duration::from_millis(100))? {
+            if let Event::Key(k) = event::read()? {
+                update(&mut model, k.code, &store);
+            }
+        }
+
+        if let Some((profile, target)) = model.install_target.take() {
+            let sources = model.store.sources.clone();
+            install_handle = Some(std::thread::spawn(move || {
+                crate::services::install::execute_install(&profile, Path::new(&target), &sources)
+            }));
         }
     }
     Ok(())

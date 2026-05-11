@@ -21,6 +21,18 @@ pub enum Modal {
     InstallPath,
 }
 
+impl AppModel {
+    pub fn on_tick(&mut self) {
+        self.spinner_idx = (self.spinner_idx + 1) % SPINNER_FRAMES.len();
+    }
+
+    pub fn spinner_char(&self) -> char {
+        SPINNER_FRAMES[self.spinner_idx]
+    }
+}
+
+const SPINNER_FRAMES: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
 impl Screen {
     pub fn next(self) -> Self {
         match self {
@@ -48,6 +60,7 @@ pub struct AppModel {
     pub status: String,
     pub modal_error: String,
     pub install_target: Option<(crate::domain::profile::Profile, String)>,
+    pub spinner_idx: usize,
     pub quit: bool,
 }
 
@@ -78,6 +91,7 @@ impl Default for AppModel {
             status: "Ready".into(),
             modal_error: String::new(),
             install_target: None,
+            spinner_idx: 0,
             quit: false,
         }
     }

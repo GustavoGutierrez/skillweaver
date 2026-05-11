@@ -235,6 +235,42 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             }
                         }
                     }
+                    Some(Modal::AddSkill) => {
+                        let name = model.input.trim().to_string();
+                        if name.is_empty() {
+                            model.modal_error = "Skill name is required".into();
+                            return;
+                        }
+                        if let Some(profile) = selected_profile_mut(model) {
+                            if profile.skills.contains(&name) {
+                                model.modal_error = "Skill already in profile".into();
+                                return;
+                            }
+                            profile.skills.push(name);
+                            model.modal = None;
+                            model.input.clear();
+                            save_model(model, store);
+                            model.status = "Skill added to profile".into();
+                        }
+                    }
+                    Some(Modal::AddRule) => {
+                        let rule = model.input.trim().to_string();
+                        if rule.is_empty() {
+                            model.modal_error = "Rule is required".into();
+                            return;
+                        }
+                        if let Some(profile) = selected_profile_mut(model) {
+                            if profile.rules.contains(&rule) {
+                                model.modal_error = "Rule already in profile".into();
+                                return;
+                            }
+                            profile.rules.push(rule);
+                            model.modal = None;
+                            model.input.clear();
+                            save_model(model, store);
+                            model.status = "Rule added to profile".into();
+                        }
+                    }
                     None => {}
                 }
             }
@@ -318,6 +354,22 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     model.input.clear();
                     model.modal_error.clear();
                     model.status = "Enter import file path".into();
+                }
+                KeyCode::Char('s') => {
+                    if selected_profile(model).is_some() {
+                        model.modal = Some(Modal::AddSkill);
+                        model.input.clear();
+                        model.modal_error.clear();
+                        model.status = "Add skill to profile".into();
+                    }
+                }
+                KeyCode::Char('r') => {
+                    if selected_profile(model).is_some() {
+                        model.modal = Some(Modal::AddRule);
+                        model.input.clear();
+                        model.modal_error.clear();
+                        model.status = "Add rule to profile".into();
+                    }
                 }
                 KeyCode::Char('o') => {
                     model.modal = Some(Modal::ExportPath);

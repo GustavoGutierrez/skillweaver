@@ -74,9 +74,18 @@ fn render_profiles(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppMo
         left,
     );
 
-    let right_text = "Manage reusable skill bundles.\n\n[c] Create new profile\n[e] Edit name\n[d] Duplicate\n[x] Delete (confirm)\n[i] Import from file\n[o] Export to file\n[Enter] or [Space] Set as default\n[j/k] Move selection\n\nTo add skills: go to [3] Repositories.";
+    let detail = if let Some(profile) = model.store.profiles.get(model.selected_profile) {
+        format!(
+            "Profile: {}\n\nSkills:\n{}\n\nRules:\n{}\n\n[c] Create  [e] Edit name  [s] Add skill  [r] Add rule  [d] Dup  [x] Delete  [i] Import  [o] Export",
+            profile.name,
+            if profile.skills.is_empty() { "  (none — press [s] to add)".to_string() } else { profile.skills.iter().map(|s| format!("  - {s}")).collect::<Vec<_>>().join("\n") },
+            if profile.rules.is_empty() { "  (none — press [r] to add)".to_string() } else { profile.rules.iter().map(|r| format!("  - {r}")).collect::<Vec<_>>().join("\n") },
+        )
+    } else {
+        "No profile selected.".to_string()
+    };
     frame.render_widget(
-        Paragraph::new(right_text)
+        Paragraph::new(detail)
             .block(Block::default().title("Profiles — create and manage profiles").borders(Borders::ALL)),
         right,
     );
@@ -175,6 +184,8 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Modal::DeleteProfileConfirm => "Delete selected profile? [Enter] confirm, [Esc] cancel".into(),
             Modal::ImportPath => format!("Import Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+            Modal::AddSkill => format!("Add Skill to Profile\n\nSkill name: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+            Modal::AddRule => format!("Add Rule to Profile\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddSource => {
                 let active_name = if model.input_focus_secondary { "" } else { " <active>" };
                 let active_path = if model.input_focus_secondary { " <active>" } else { "" };

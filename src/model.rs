@@ -15,6 +15,8 @@ pub enum Modal {
     AddSource,
     ImportPath,
     ExportPath,
+    AddSkill,
+    AddRule,
 }
 
 impl Screen {

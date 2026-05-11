@@ -35,7 +35,7 @@ pub fn extract_zip_safely(zip_path: &Path, target: &Path) -> AppResult<()> {
             if let Some(parent) = out.parent() {
                 fs::create_dir_all(parent)?;
             }
-            let mut out_file = fs::File::create(&out)?;
+            let mut out_file = fs::OpenOptions::new().write(true).create(true).truncate(true).open(&out)?;
             io::copy(&mut entry, &mut out_file)?;
         }
     }

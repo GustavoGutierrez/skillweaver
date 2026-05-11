@@ -136,7 +136,7 @@ fn preview_blocks_traversal_skill_names() {
 }
 
 #[test]
-fn preview_blocks_target_conflict_when_install_target_exists() {
+fn preview_allows_install_when_target_already_has_skills() {
     let dir = tempfile::tempdir().unwrap();
     let skill_dir = dir.path().join(".agents/skills/existing");
     fs::create_dir_all(&skill_dir).unwrap();
@@ -148,10 +148,8 @@ fn preview_blocks_target_conflict_when_install_target_exists() {
 
     let profile = sample_profile(vec!["existing"]);
     let plan = build_preview(&profile, dir.path());
-    assert!(!plan.can_install);
-    assert!(plan
-        .blocked_by
-        .contains(&skillweaver::domain::install::BlockReason::Conflict));
+    // Existing skills are not a blocker — install should skip them and succeed
+    assert!(plan.can_install);
 }
 
 #[test]

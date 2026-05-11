@@ -16,8 +16,44 @@ SkillWeaver lets you discover, preview, install, and share collections of AI age
 # Build from source
 cargo build
 
-# Launch the TUI
+# CLI mode — install a profile directly (auto-detects current directory)
+./target/debug/skillweaver install "Recommended Starter"
+
+# CLI mode — list available profiles
+./target/debug/skillweaver list
+
+# CLI mode — import profiles from JSON
+./target/debug/skillweaver import profiles/skillweaver-profile-recommended.json
+
+# TUI mode — interactive terminal interface (no arguments)
 ./target/debug/skillweaver
+```
+
+### CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `skillweaver install <name>` | Download and extract all skills from a profile into the current directory |
+| `skillweaver install <name> --target <path>` | Install into a specific directory |
+| `skillweaver list` | Show all profiles with skill and rule counts |
+| `skillweaver import <file>` | Import profiles from a JSON file |
+| `skillweaver` (no args) | Launch the interactive TUI |
+
+The CLI shows real-time progress for each skill being downloaded and extracted:
+
+```
+[1/12] context-engineer
+  ⬇ downloading context-engineer...
+  📦 extracting context-engineer...
+  ✅ context-engineer installed
+[2/12] prompt-engineer
+  ⬇ downloading prompt-engineer...
+  ...
+[3/12] ⏭ prd-writer (already installed)
+
+📝 writing AGENTS.md...
+🔒 updating skills-lock.json...
+Installed profile 'Recommended Starter' via 12 skill(s) installed
 ```
 
 ---
@@ -47,6 +83,7 @@ View your profiles, see which skills and rules each one contains, and set a defa
 |-----|--------|
 | `j` / `k` | Navigate profile list |
 | `Enter` or `Space` | Set selected profile as default |
+| `i` | Install selected profile (Enter to confirm, auto-detects current dir) |
 
 The right panel shows the currently selected profile's skills and rules.
 
@@ -123,16 +160,16 @@ Full keyboard reference with all keybindings.
 
 ## Install and Safety Features
 
-The following features are implemented in the backend and tested, with TUI wiring in progress:
-
 | Feature | Status |
 |---------|--------|
-| Install preview with blocker enforcement | ✅ Backend + tests |
-| Safe ZIP extraction (path traversal rejection) | ✅ Backend + tests |
-| Symlink-first with copy fallback | ✅ Backend + tests |
-| `skills-lock.json` generation (skills only) | ✅ Backend + tests |
-| Managed block mutation in `AGENTS.md` / `CLAUDE.md` | ✅ Backend + tests |
-| `SKILL.md` YAML frontmatter parsing | ✅ Backend + tests |
+| Install preview with blocker enforcement (traversal detection) | ✅ |
+| Safe ZIP extraction (path traversal rejection) | ✅ |
+| Real skill download from GitHub ZIP sources | ✅ |
+| Symlink-first with copy fallback | ✅ |
+| `skills-lock.json` generation (skills only) | ✅ |
+| Managed block mutation in `AGENTS.md` / `CLAUDE.md` | ✅ |
+| `SKILL.md` YAML frontmatter parsing | ✅ |
+| Multi-profile install (existing skills are skipped) | ✅ |
 
 **Managed block markers** used in target Markdown files:
 ```markdown

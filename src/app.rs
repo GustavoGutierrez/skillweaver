@@ -11,8 +11,6 @@ use crate::model::{AppModel, Modal, RuntimeDiscovery, Screen};
 use crate::services::discovery::discover_skills;
 use crate::services::profile_io::{export_profiles, import_profiles};
 
-const PROFILE_IO_BUNDLE_PATH: &str = "skillweaver-profiles.json";
-
 fn default_store() -> ProfileStoreData {
     ProfileStoreData {
         schema_version: ProfileStoreData::SCHEMA_VERSION,
@@ -197,6 +195,46 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         save_model(model, store);
                         model.status = "Source registered".into();
                     }
+                    Some(Modal::ImportPath) => {
+                        let path_str = model.input.trim().to_string();
+                        if path_str.is_empty() {
+                            model.modal_error = "File path is required".into();
+                            return;
+                        }
+                        let path = Path::new(&path_str);
+                        match import_profiles(path) {
+                            Ok(data) => {
+                                model.store = data;
+                                model.modal = None;
+                                model.input.clear();
+                                normalize_selection(model);
+                                refresh_discoveries(model);
+                                save_model(model, store);
+                                model.status = format!("Imported from {}", path.display());
+                            }
+                            Err(err) => {
+                                model.modal_error = format!("Import failed: {err}");
+                            }
+                        }
+                    }
+                    Some(Modal::ExportPath) => {
+                        let path_str = model.input.trim().to_string();
+                        if path_str.is_empty() {
+                            model.modal_error = "File path is required".into();
+                            return;
+                        }
+                        let path = Path::new(&path_str);
+                        match export_profiles(path, &model.store) {
+                            Ok(()) => {
+                                model.modal = None;
+                                model.input.clear();
+                                model.status = format!("Exported to {}", path.display());
+                            }
+                            Err(err) => {
+                                model.modal_error = format!("Export failed: {err}");
+                            }
+                        }
+                    }
                     None => {}
                 }
             }
@@ -276,30 +314,16 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     model.status = "Default profile selected".into();
                 }
                 KeyCode::Char('i') => {
-                    let path = Path::new(PROFILE_IO_BUNDLE_PATH);
-                    match import_profiles(path) {
-                        Ok(data) => {
-                            model.store = data;
-                            normalize_selection(model);
-                            refresh_discoveries(model);
-                            save_model(model, store);
-                            model.status = format!("Profiles imported from {}", path.display());
-                        }
-                        Err(err) => {
-                            model.status = format!("Import failed: {err}");
-                        }
-                    }
+                    model.modal = Some(Modal::ImportPath);
+                    model.input.clear();
+                    model.modal_error.clear();
+                    model.status = "Enter import file path".into();
                 }
                 KeyCode::Char('o') => {
-                    let path = Path::new(PROFILE_IO_BUNDLE_PATH);
-                    match export_profiles(path, &model.store) {
-                        Ok(()) => {
-                            model.status = format!("Profiles exported to {}", path.display());
-                        }
-                        Err(err) => {
-                            model.status = format!("Export failed: {err}");
-                        }
-                    }
+                    model.modal = Some(Modal::ExportPath);
+                    model.input.clear();
+                    model.modal_error.clear();
+                    model.status = "Enter export file path".into();
                 }
                 _ => {}
             },
@@ -457,16 +481,30 @@ mod tests {
         let mut model = AppModel::default();
         model.active = Screen::Profiles;
 
+        // Create profile
         update(&mut model, KeyCode::Char('c'), &store);
         for ch in "Alpha".chars() {
             update(&mut model, KeyCode::Char(ch), &store);
         }
         update(&mut model, KeyCode::Enter, &store);
-        update(&mut model, KeyCode::Char('o'), &store);
 
+        // Export via modal
+        update(&mut model, KeyCode::Char('o'), &store);
+        for ch in "exported.json".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
+
+        // Clear state
         model.store.profiles.clear();
         model.store.default_profile_id = None;
+
+        // Import via modal
         update(&mut model, KeyCode::Char('i'), &store);
+        for ch in "exported.json".chars() {
+            update(&mut model, KeyCode::Char(ch), &store);
+        }
+        update(&mut model, KeyCode::Enter, &store);
 
         assert_eq!(model.store.profiles.len(), 1);
         assert_eq!(model.store.profiles[0].name, "Alpha");

@@ -173,6 +173,8 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
             Modal::CreateProfile => format!("Create Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::EditProfile => format!("Edit Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::DeleteProfileConfirm => "Delete selected profile? [Enter] confirm, [Esc] cancel".into(),
+            Modal::ImportPath => format!("Import Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+            Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
             Modal::AddSource => {
                 let active_name = if model.input_focus_secondary { "" } else { " <active>" };
                 let active_path = if model.input_focus_secondary { " <active>" } else { "" };

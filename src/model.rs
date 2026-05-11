@@ -13,6 +13,8 @@ pub enum Modal {
     EditProfile,
     DeleteProfileConfirm,
     AddSource,
+    ImportPath,
+    ExportPath,
 }
 
 impl Screen {

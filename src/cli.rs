@@ -67,7 +67,7 @@ fn cmd_install(args: &[String]) -> Result<()> {
         bail!("Target path does not exist: {target}");
     }
 
-    let mode = execute_install(profile, project_root)?;
+    let mode = execute_install(profile, project_root, &data.sources)?;
     println!("Installed profile '{}' into '{}' via {mode}", profile.name, target);
     println!("Skills: {}", profile.skills.join(", "));
     if !profile.rules.is_empty() {

@@ -307,7 +307,7 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                                 return;
                             }
                         };
-                        match crate::services::install::execute_install(&profile, project_root) {
+                        match crate::services::install::execute_install(&profile, project_root, &model.store.sources) {
                             Ok(mode) => {
                                 model.modal = None;
                                 model.input.clear();

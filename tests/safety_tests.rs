@@ -158,7 +158,7 @@ fn preview_blocks_target_conflict_when_install_target_exists() {
 fn execute_install_refuses_when_preview_has_blockers() {
     let dir = tempfile::tempdir().unwrap();
     let profile = sample_profile(vec!["../escape"]);
-    let out = execute_install(&profile, dir.path());
+    let out = execute_install(&profile, dir.path(), &[]);
     assert!(out.is_err());
 }
 

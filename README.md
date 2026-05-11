@@ -1,5 +1,9 @@
 # SkillWeaver
 
+<p align="center">
+  <img src="skillweaver.png" alt="SkillWeaver Mascot — Robo Jumping Spider" width="200">
+</p>
+
 [![Rust](https://img.shields.io/badge/Rust-2024_edition-orange?logo=rust)](https://www.rust-lang.org/)
 [![Ratatui](https://img.shields.io/badge/Ratatui-0.30-cyan)](https://ratatui.rs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)

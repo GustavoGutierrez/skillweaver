@@ -173,15 +173,22 @@ pub fn execute_install(profile: &Profile, project_root: &Path, sources: &[Source
     save_lockfile(project_root, &lock)
         .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("lockfile write failed: {e}"))))?;
 
-    let dst = project_root.join(".claude/skills");
-    if skills_dir.exists() && !dst.exists() {
-        eprintln!("🔗 linking .claude/skills...");
-        if let Some(parent) = dst.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!(".claude dir create failed: {e}"))))?;
+    let has_claude = project_root.join("CLAUDE.md").exists() || project_root.join(".claude").is_dir();
+    if has_claude {
+        eprintln!("🔗 linking individual skills to .claude/skills/...");
+        let claude_skills = project_root.join(".claude/skills");
+        std::fs::create_dir_all(&claude_skills)
+            .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!(".claude/skills create failed: {e}"))))?;
+        for skill in &profile.skills {
+            let src = skills_dir.join(skill);
+            let dst = claude_skills.join(skill);
+            if src.exists() && !dst.exists() {
+                eprintln!("  🔗 {skill}");
+                let abs_src = src.canonicalize().unwrap_or_else(|_| src.clone());
+                symlink_or_copy(&abs_src, &dst)
+                    .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("symlink {skill} failed: {e}"))))?;
+            }
         }
-        symlink_or_copy(&skills_dir, &dst)
-            .map_err(|e| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, format!("symlink failed: {e}"))))?;
     }
 
     let msg = if skipped > 0 {

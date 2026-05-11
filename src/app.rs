@@ -290,10 +290,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         }
                     }
                     Some(Modal::InstallPath) => {
-                        let path_str = model.input.trim().to_string();
+                        let mut path_str = model.input.trim().to_string();
                         if path_str.is_empty() {
-                            model.modal_error = "Project path is required".into();
-                            return;
+                            path_str = ".".to_string();
                         }
                         let project_root = Path::new(&path_str);
                         if !project_root.exists() {
@@ -366,9 +365,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                 KeyCode::Char('i') => {
                     if selected_profile(model).is_some() {
                         model.modal = Some(Modal::InstallPath);
-                        model.input.clear();
+                        model.input = ".".to_string();
                         model.modal_error.clear();
-                        model.status = "Enter target project path to install".into();
+                        model.status = "Press Enter to install here, or type a path".into();
                     }
                 }
                 _ => {}

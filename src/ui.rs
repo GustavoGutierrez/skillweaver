@@ -199,15 +199,8 @@ fn render_about(frame: &mut Frame, area: ratatui::layout::Rect) {
     let mascot_height = crate::ascii::MASCOT.len() as u16;
     let [mascot_area, info_area] = Layout::vertical([Constraint::Length(mascot_height), Constraint::Fill(1)]).areas(area);
 
-    let mascot_lines: Vec<Line> = crate::ascii::MASCOT.iter().enumerate().map(|(i, line)| {
-        let color = match i {
-            0..=2 => ratatui::style::Color::DarkGray,
-            3..=5 => ratatui::style::Color::Yellow,
-            6..=7 => ratatui::style::Color::Cyan,
-            8..=10 => ratatui::style::Color::Yellow,
-            _ => ratatui::style::Color::DarkGray,
-        };
-        Line::from(Span::styled(*line, ratatui::style::Style::default().fg(color)))
+    let mascot_lines: Vec<Line> = crate::ascii::MASCOT.iter().map(|line| {
+        Line::from(Span::styled(*line, ratatui::style::Style::default().fg(ratatui::style::Color::Cyan)))
     }).collect();
     frame.render_widget(Paragraph::new(mascot_lines), mascot_area);
 

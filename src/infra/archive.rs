@@ -11,9 +11,13 @@ fn safe_join(root: &Path, name: &str) -> AppResult<PathBuf> {
     let canon_root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
     let parent = out.parent().unwrap_or(root);
     fs::create_dir_all(parent)?;
-    let canon_parent = parent.canonicalize().unwrap_or_else(|_| parent.to_path_buf());
+    let canon_parent = parent
+        .canonicalize()
+        .unwrap_or_else(|_| parent.to_path_buf());
     if !canon_parent.starts_with(&canon_root) {
-        return Err(AppError::Blocked("zip entry escapes target directory".into()));
+        return Err(AppError::Blocked(
+            "zip entry escapes target directory".into(),
+        ));
     }
     Ok(out)
 }
@@ -26,7 +30,9 @@ pub fn extract_zip_safely(zip_path: &Path, target: &Path) -> AppResult<()> {
         let mut entry = archive.by_index(i)?;
         let name = entry.name().to_string();
         if name.contains("..") || name.starts_with('/') || name.starts_with('\\') {
-            return Err(AppError::Blocked("path traversal detected in archive".into()));
+            return Err(AppError::Blocked(
+                "path traversal detected in archive".into(),
+            ));
         }
         let out = safe_join(target, &name)?;
         if entry.name().ends_with('/') {
@@ -35,7 +41,11 @@ pub fn extract_zip_safely(zip_path: &Path, target: &Path) -> AppResult<()> {
             if let Some(parent) = out.parent() {
                 fs::create_dir_all(parent)?;
             }
-            let mut out_file = fs::OpenOptions::new().write(true).create(true).truncate(true).open(&out)?;
+            let mut out_file = fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open(&out)?;
             io::copy(&mut entry, &mut out_file)?;
         }
     }

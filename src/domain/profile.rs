@@ -33,7 +33,9 @@ pub struct ProfileStoreData {
 impl Profile {
     pub fn validate(&self) -> AppResult<()> {
         if self.id.trim().is_empty() || self.name.trim().is_empty() {
-            return Err(AppError::Validation("profile id/name must not be empty".into()));
+            return Err(AppError::Validation(
+                "profile id/name must not be empty".into(),
+            ));
         }
         Ok(())
     }
@@ -44,7 +46,9 @@ impl ProfileStoreData {
 
     pub fn validate(&self) -> AppResult<()> {
         if self.schema_version != Self::SCHEMA_VERSION {
-            return Err(AppError::Validation("unsupported profile schema version".into()));
+            return Err(AppError::Validation(
+                "unsupported profile schema version".into(),
+            ));
         }
         for p in &self.profiles {
             p.validate()?;

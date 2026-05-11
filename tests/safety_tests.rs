@@ -27,11 +27,7 @@ fn sample_profile(skills: Vec<&str>) -> Profile {
 fn preserves_markdown_outside_managed_block() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("AGENTS.md");
-    fs::write(
-        &path,
-        format!("before\n{BEGIN}\nold\n{END}\nafter\n"),
-    )
-    .unwrap();
+    fs::write(&path, format!("before\n{BEGIN}\nold\n{END}\nafter\n")).unwrap();
     apply_managed_rules(&path, "new").unwrap();
     let out = fs::read_to_string(path).unwrap();
     assert!(out.contains("before"));
@@ -132,9 +128,10 @@ fn preview_blocks_traversal_skill_names() {
     let profile = sample_profile(vec!["../escape"]);
     let plan = build_preview(&profile, dir.path());
     assert!(!plan.can_install);
-    assert!(plan
-        .blocked_by
-        .contains(&skillweaver::domain::install::BlockReason::Traversal));
+    assert!(
+        plan.blocked_by
+            .contains(&skillweaver::domain::install::BlockReason::Traversal)
+    );
 }
 
 #[test]

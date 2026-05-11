@@ -153,7 +153,11 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             source_url: None,
                         });
                         model.selected_profile = model.store.profiles.len() - 1;
-                        model.store.default_profile_id = model.store.profiles.get(model.selected_profile).map(|p| p.id.clone());
+                        model.store.default_profile_id = model
+                            .store
+                            .profiles
+                            .get(model.selected_profile)
+                            .map(|p| p.id.clone());
                         model.modal = None;
                         model.input.clear();
                         save_model(model, store);
@@ -181,7 +185,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         }
                         model.store.profiles.remove(model.selected_profile);
                         normalize_selection(model);
-                        model.store.default_profile_id = selected_profile(model).map(|p| p.id.clone());
+                        model.store.default_profile_id =
+                            selected_profile(model).map(|p| p.id.clone());
                         model.modal = None;
                         save_model(model, store);
                         model.status = "Profile deleted".into();
@@ -195,7 +200,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                             return;
                         }
                         if !Path::new(root).exists() {
-                            model.modal_error = format!("Path does not exist: {root}\nOnly local directory paths are supported, not URLs.");
+                            model.modal_error = format!(
+                                "Path does not exist: {root}\nOnly local directory paths are supported, not URLs."
+                            );
                             return;
                         }
                         model.store.sources.push(SourceRegistration {
@@ -229,7 +236,11 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                                 normalize_selection(model);
                                 refresh_discoveries(model);
                                 save_model(model, store);
-                                model.status = format!("Imported {} profile(s) from {}", added, path.display());
+                                model.status = format!(
+                                    "Imported {} profile(s) from {}",
+                                    added,
+                                    path.display()
+                                );
                             }
                             Err(err) => {
                                 model.modal_error = format!("Import failed: {err}");
@@ -396,7 +407,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
             Screen::Dashboard => match key {
                 KeyCode::Down | KeyCode::Char('j') => {
                     if !model.store.profiles.is_empty() {
-                        model.selected_profile = (model.selected_profile + 1).min(model.store.profiles.len() - 1);
+                        model.selected_profile =
+                            (model.selected_profile + 1).min(model.store.profiles.len() - 1);
                     }
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
@@ -420,7 +432,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
             Screen::Profiles => match key {
                 KeyCode::Down | KeyCode::Char('j') => {
                     if !model.store.profiles.is_empty() {
-                        model.selected_profile = (model.selected_profile + 1).min(model.store.profiles.len() - 1);
+                        model.selected_profile =
+                            (model.selected_profile + 1).min(model.store.profiles.len() - 1);
                     }
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
@@ -487,12 +500,12 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     }
                 }
                 KeyCode::Char('X') => {
-                    if let Some(profile) = selected_profile(model) {
-                        if !profile.skills.is_empty() {
-                            model.modal = Some(Modal::RemoveSkill);
-                            model.input.clear();
-                            model.status = "Type skill number to remove".into();
-                        }
+                    if let Some(profile) = selected_profile(model)
+                        && !profile.skills.is_empty()
+                    {
+                        model.modal = Some(Modal::RemoveSkill);
+                        model.input.clear();
+                        model.status = "Type skill number to remove".into();
                     }
                 }
                 KeyCode::Char('u') => {
@@ -502,12 +515,12 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     model.status = "Edit source URL".into();
                 }
                 KeyCode::Char('Z') => {
-                    if let Some(profile) = selected_profile(model) {
-                        if !profile.rules.is_empty() {
-                            model.modal = Some(Modal::RemoveRule);
-                            model.input.clear();
-                            model.status = "Type rule number to remove".into();
-                        }
+                    if let Some(profile) = selected_profile(model)
+                        && !profile.rules.is_empty()
+                    {
+                        model.modal = Some(Modal::RemoveRule);
+                        model.input.clear();
+                        model.status = "Type rule number to remove".into();
                     }
                 }
                 KeyCode::Char('o') => {
@@ -521,7 +534,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
             Screen::Repositories => match key {
                 KeyCode::Down | KeyCode::Char('j') => {
                     if !model.discoveries.is_empty() {
-                        model.selected_discovery = (model.selected_discovery + 1).min(model.discoveries.len() - 1);
+                        model.selected_discovery =
+                            (model.selected_discovery + 1).min(model.discoveries.len() - 1);
                     }
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
@@ -555,12 +569,16 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
 
 pub fn run(mut terminal: DefaultTerminal) -> AppResult<()> {
     let store = ProfileStore::user_default()?;
-    let mut model = AppModel::default();
-    model.store = store.load().unwrap_or_else(|_| default_store());
+    let mut model = AppModel {
+        store: store.load().unwrap_or_else(|_| default_store()),
+        ..Default::default()
+    };
     refresh_discoveries(&mut model);
     normalize_selection(&mut model);
 
-    let mut install_handle: Option<std::thread::JoinHandle<Result<String, crate::error::AppError>>> = None;
+    let mut install_handle: Option<
+        std::thread::JoinHandle<Result<String, crate::error::AppError>>,
+    > = None;
 
     while !model.quit {
         model.on_tick();
@@ -580,10 +598,10 @@ pub fn run(mut terminal: DefaultTerminal) -> AppResult<()> {
             continue;
         }
 
-        if crossterm::event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(k) = event::read()? {
-                update(&mut model, k.code, &store);
-            }
+        if crossterm::event::poll(std::time::Duration::from_millis(100))?
+            && let Event::Key(k) = event::read()?
+        {
+            update(&mut model, k.code, &store);
         }
 
         if let Some((profile, target)) = model.install_target.take() {
@@ -726,8 +744,8 @@ mod tests {
 
     #[test]
     fn space_key_matches_contract_for_selection_actions() {
-        use crate::domain::source::{SourceRegistration, SourceType};
         use crate::app::refresh_discoveries;
+        use crate::domain::source::{SourceRegistration, SourceType};
         let dir = tempfile::tempdir().unwrap();
         let sources_root = dir.path().join("sources");
         std::fs::create_dir_all(sources_root.join("skills/space-skill")).unwrap();
@@ -757,7 +775,10 @@ mod tests {
             source_type: SourceType::Local,
         });
         refresh_discoveries(&mut model);
-        assert!(!model.discoveries.is_empty(), "discoveries should not be empty after scan");
+        assert!(
+            !model.discoveries.is_empty(),
+            "discoveries should not be empty after scan"
+        );
 
         // Add discovery to profile via Space key
         model.active = Screen::Repositories;

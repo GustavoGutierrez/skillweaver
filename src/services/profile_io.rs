@@ -13,7 +13,9 @@ pub fn import_profiles(path: &Path) -> AppResult<ProfileStoreData> {
     let raw = fs::read_to_string(path)?;
     let data: ProfileStoreData = serde_json::from_str(&raw)?;
     if data.schema_version != ProfileStoreData::SCHEMA_VERSION {
-        return Err(AppError::Validation("incompatible import schema version".into()));
+        return Err(AppError::Validation(
+            "incompatible import schema version".into(),
+        ));
     }
     data.validate()?;
     Ok(data)

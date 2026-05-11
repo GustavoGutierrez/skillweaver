@@ -12,7 +12,8 @@ impl ProfileStore {
     }
 
     pub fn user_default() -> AppResult<Self> {
-        let base = dirs::config_dir().ok_or_else(|| AppError::Validation("missing config dir".into()))?;
+        let base =
+            dirs::config_dir().ok_or_else(|| AppError::Validation("missing config dir".into()))?;
         Ok(Self::new(base.join("skillweaver").join("profiles.json")))
     }
 

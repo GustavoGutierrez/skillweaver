@@ -33,7 +33,9 @@ pub fn discover_skills(root: &Path) -> AppResult<Vec<DiscoveredSkill>> {
                 Err(_) => skill_dir.clone(),
             };
             if !canon.starts_with(&canon_root) {
-                return Err(AppError::Blocked("source path escaped registered root".into()));
+                return Err(AppError::Blocked(
+                    "source path escaped registered root".into(),
+                ));
             }
             let skill_md = skill_dir.join("SKILL.md");
             if skill_md.exists() {

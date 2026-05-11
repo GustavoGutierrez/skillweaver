@@ -15,17 +15,23 @@ pub fn discover_skills(root: &Path) -> AppResult<Vec<DiscoveredSkill>> {
     let mut out = Vec::new();
     for rel in APPROVED_SKILL_PATHS {
         let dir = root.join(rel);
-        if !dir.exists() {
+        if !dir.is_dir() {
             continue;
         }
-        let canon_root = root.canonicalize()?;
+        let canon_root = match root.canonicalize() {
+            Ok(c) => c,
+            Err(_) => root.to_path_buf(),
+        };
         for ent in fs::read_dir(&dir)? {
             let ent = ent?;
             if !ent.file_type()?.is_dir() {
                 continue;
             }
             let skill_dir = ent.path();
-            let canon = skill_dir.canonicalize()?;
+            let canon = match skill_dir.canonicalize() {
+                Ok(c) => c,
+                Err(_) => skill_dir.clone(),
+            };
             if !canon.starts_with(&canon_root) {
                 return Err(AppError::Blocked("source path escaped registered root".into()));
             }

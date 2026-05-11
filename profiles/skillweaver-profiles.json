@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "engineering-toolkit",
+  "profiles": [
+    {
+      "id": "engineering-toolkit",
+      "name": "Engineering Toolkit (All 24)",
+      "description": "Complete set of 24 AI agent skills for engineering, product, architecture, and delivery workflows.",
+      "skills": [
+        "acceptance-criteria-generator",
+        "api-spec-writer",
+        "compliance-guard",
+        "context-engineer",
+        "decision-record-writer",
+        "documentation-architect",
+        "frontend-spec-writer",
+        "observability-designer",
+        "prd-writer",
+        "prompt-engineer",
+        "prp-writer",
+        "release-planner",
+        "reviewer",
+        "risk-assessor",
+        "solution-architect",
+        "spec-architect",
+        "spec-writer",
+        "story-refiner",
+        "task-breakdown",
+        "technical-planner",
+        "togaf-writer",
+        "traceability-manager",
+        "validation-strategist",
+        "workflow-designer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

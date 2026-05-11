@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "recommended",
+  "profiles": [
+    {
+      "id": "recommended",
+      "name": "Recommended Starter",
+      "description": "Curated core skills covering the full SDLC — from product definition through delivery — for any project.",
+      "skills": [
+        "context-engineer",
+        "prompt-engineer",
+        "prd-writer",
+        "spec-writer",
+        "story-refiner",
+        "acceptance-criteria-generator",
+        "task-breakdown",
+        "reviewer",
+        "validation-strategist",
+        "traceability-manager",
+        "decision-record-writer",
+        "documentation-architect"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

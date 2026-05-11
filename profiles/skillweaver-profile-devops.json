@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "devops",
+  "profiles": [
+    {
+      "id": "devops",
+      "name": "DevOps & Platform",
+      "description": "Skills for release planning, observability, validation, compliance, and operational readiness.",
+      "skills": [
+        "release-planner",
+        "observability-designer",
+        "validation-strategist",
+        "risk-assessor",
+        "task-breakdown",
+        "reviewer",
+        "compliance-guard",
+        "decision-record-writer",
+        "documentation-architect",
+        "workflow-designer",
+        "technical-planner",
+        "context-engineer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

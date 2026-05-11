@@ -39,6 +39,7 @@ pub struct AppModel {
     pub selected_discovery: usize,
     pub discoveries: Vec<RuntimeDiscovery>,
     pub status: String,
+    pub modal_error: String,
     pub quit: bool,
 }
 
@@ -67,6 +68,7 @@ impl Default for AppModel {
             selected_discovery: 0,
             discoveries: Vec::new(),
             status: "Ready".into(),
+            modal_error: String::new(),
             quit: false,
         }
     }

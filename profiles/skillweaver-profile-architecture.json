@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "architecture",
+  "profiles": [
+    {
+      "id": "architecture",
+      "name": "Solution Architecture",
+      "description": "Skills for system design, specs, APIs, workflows, architecture decisions, and enterprise governance.",
+      "skills": [
+        "spec-architect",
+        "solution-architect",
+        "api-spec-writer",
+        "frontend-spec-writer",
+        "workflow-designer",
+        "technical-planner",
+        "togaf-writer",
+        "decision-record-writer",
+        "documentation-architect",
+        "risk-assessor",
+        "compliance-guard",
+        "traceability-manager",
+        "context-engineer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

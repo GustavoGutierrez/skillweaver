@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "frontend-dev",
+  "profiles": [
+    {
+      "id": "frontend-dev",
+      "name": "Frontend Development",
+      "description": "Skills for UI specification, component design, acceptance criteria, and frontend validation.",
+      "skills": [
+        "frontend-spec-writer",
+        "acceptance-criteria-generator",
+        "spec-writer",
+        "story-refiner",
+        "task-breakdown",
+        "reviewer",
+        "validation-strategist",
+        "documentation-architect",
+        "context-engineer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

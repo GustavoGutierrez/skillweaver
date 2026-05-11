@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "backend-dev",
+  "profiles": [
+    {
+      "id": "backend-dev",
+      "name": "Backend Development",
+      "description": "Skills for API design, architecture, workflows, risk assessment, and backend validation.",
+      "skills": [
+        "api-spec-writer",
+        "spec-architect",
+        "solution-architect",
+        "technical-planner",
+        "workflow-designer",
+        "acceptance-criteria-generator",
+        "spec-writer",
+        "story-refiner",
+        "task-breakdown",
+        "reviewer",
+        "risk-assessor",
+        "decision-record-writer",
+        "validation-strategist",
+        "traceability-manager",
+        "context-engineer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

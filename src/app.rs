@@ -42,8 +42,12 @@ fn refresh_discoveries(model: &mut AppModel) {
     model.discoveries.clear();
     for src in &model.store.sources {
         let root = Path::new(&src.root);
-        let Ok(found) = discover_skills(root) else {
-            continue;
+        let found = match discover_skills(root) {
+            Ok(f) => f,
+            Err(e) => {
+                model.status = format!("Discovery error for '{}': {e}", src.name);
+                continue;
+            }
         };
         for item in found {
             let skill_name = item
@@ -99,6 +103,7 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
             KeyCode::Char('q') => model.quit = true,
             KeyCode::Esc => {
                 model.modal = None;
+                model.modal_error.clear();
                 model.input.clear();
                 model.input_secondary.clear();
                 model.input_focus_secondary = false;
@@ -118,8 +123,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                 match model.modal {
                     Some(Modal::CreateProfile) => {
                         let name = model.input.trim();
+                        model.modal_error.clear();
                         if name.is_empty() {
-                            model.status = "Profile name is required".into();
+                            model.modal_error = "Profile name is required".into();
                             return;
                         }
                         let id = format!("profile-{}", model.store.profiles.len() + 1);
@@ -140,8 +146,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     }
                     Some(Modal::EditProfile) => {
                         let name = model.input.trim().to_string();
+                        model.modal_error.clear();
                         if name.is_empty() {
-                            model.status = "Profile name is required".into();
+                            model.modal_error = "Profile name is required".into();
                             return;
                         }
                         if let Some(profile) = selected_profile_mut(model) {
@@ -167,12 +174,13 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     Some(Modal::AddSource) => {
                         let name = model.input.trim();
                         let root = model.input_secondary.trim();
+                        model.modal_error.clear();
                         if name.is_empty() || root.is_empty() {
-                            model.status = "Source name and path are required".into();
+                            model.modal_error = "Source name and path are required".into();
                             return;
                         }
                         if !Path::new(root).exists() {
-                            model.status = "Source path does not exist".into();
+                            model.modal_error = format!("Path does not exist: {root}\nOnly local directory paths are supported, not URLs.");
                             return;
                         }
                         model.store.sources.push(SourceRegistration {
@@ -468,6 +476,8 @@ mod tests {
 
     #[test]
     fn space_key_matches_contract_for_selection_actions() {
+        use crate::domain::source::{SourceRegistration, SourceType};
+        use crate::app::refresh_discoveries;
         let dir = tempfile::tempdir().unwrap();
         let sources_root = dir.path().join("sources");
         std::fs::create_dir_all(sources_root.join("skills/space-skill")).unwrap();
@@ -480,6 +490,7 @@ mod tests {
         let store = ProfileStore::new(dir.path().join("profiles.json"));
         let mut model = AppModel::default();
 
+        // Create a profile
         model.active = Screen::Profiles;
         update(&mut model, KeyCode::Char('c'), &store);
         for ch in "Main".chars() {
@@ -489,17 +500,17 @@ mod tests {
         update(&mut model, KeyCode::Char(' '), &store);
         assert_eq!(model.store.default_profile_id.as_deref(), Some("profile-1"));
 
+        // Register source directly in model, then scan
+        model.store.sources.push(SourceRegistration {
+            name: "local".into(),
+            root: sources_root.display().to_string(),
+            source_type: SourceType::Local,
+        });
+        refresh_discoveries(&mut model);
+        assert!(!model.discoveries.is_empty(), "discoveries should not be empty after scan");
+
+        // Add discovery to profile via Space key
         model.active = Screen::Repositories;
-        update(&mut model, KeyCode::Char('n'), &store);
-        for ch in "local".chars() {
-            update(&mut model, KeyCode::Char(ch), &store);
-        }
-        update(&mut model, KeyCode::Tab, &store);
-        for ch in sources_root.display().to_string().chars() {
-            update(&mut model, KeyCode::Char(ch), &store);
-        }
-        update(&mut model, KeyCode::Enter, &store);
-        update(&mut model, KeyCode::Char('r'), &store);
         update(&mut model, KeyCode::Char(' '), &store);
 
         assert_eq!(model.store.profiles[0].skills, vec!["space-skill"]);

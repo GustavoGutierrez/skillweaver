@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "default_profile_id": "product-mgmt",
+  "profiles": [
+    {
+      "id": "product-mgmt",
+      "name": "Product Management",
+      "description": "Skills for PRDs, PRPs, story refinement, acceptance criteria, and traceability.",
+      "skills": [
+        "prd-writer",
+        "prp-writer",
+        "story-refiner",
+        "acceptance-criteria-generator",
+        "spec-writer",
+        "traceability-manager",
+        "task-breakdown",
+        "reviewer",
+        "documentation-architect",
+        "context-engineer"
+      ],
+      "rules": [],
+      "install_mode": "auto"
+    }
+  ],
+  "sources": [
+    {
+      "name": "Engineering Skills (GitHub)",
+      "root": "https://github.com/GustavoGutierrez/engineering-skills/raw/refs/heads/main/skills",
+      "source_type": "zip"
+    }
+  ]
+}

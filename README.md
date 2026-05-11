@@ -254,10 +254,19 @@ cargo build     # Build binary at target/debug/skillweaver
 
 ## Releasing
 
-1. Tag the release: `git tag v0.0.1 && git push origin v0.0.1`
-2. GitHub Actions builds and attaches the binary to the release
-3. Update SHA256 in `Formula/skillweaver.rb`: `sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz`
-4. Commit the updated formula and push
+```bash
+# Auto-detect version bump from commits (patch/minor/major)
+./scripts/release.sh
+```
+
+The script:
+- Auto-detects bump type from conventional commits since last tag
+- Runs tests, builds release, packages tarball
+- Computes SHA256 and updates `Formula/skillweaver.rb`
+- Bumps version in `Cargo.toml` and `src/ui.rs`
+- Commits, tags, pushes, and creates GitHub Release with `gh`
+
+Or manually: `git tag v0.0.2 && git push origin v0.0.2` (CI handles the rest).
 
 ---
 

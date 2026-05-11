@@ -22,7 +22,7 @@ jobs:
           mkdir -p dist
           cp target/release/skillweaver dist/
           cd dist && tar czf ../skillweaver-x86_64-unknown-linux-gnu.tar.gz skillweaver
-          sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz > ../skillweaver-x86_64-unknown-linux-gnu.tar.gz.sha256
+          cd .. && sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz > skillweaver-x86_64-unknown-linux-gnu.tar.gz.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

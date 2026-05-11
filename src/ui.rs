@@ -230,18 +230,26 @@ fn tab_label(screen: Screen, active: Screen, name: &str, num: usize) -> Span<'st
 pub fn render(frame: &mut Frame, model: &AppModel) {
     let chunks = Layout::vertical([Constraint::Length(3), Constraint::Min(8), Constraint::Length(3)]).split(frame.area());
 
-    let tabs = Line::from(vec![
-        tab_label(Screen::Dashboard, model.active, "Dashboard", 1),
-        Span::from(" │ ").dim(),
-        tab_label(Screen::Profiles, model.active, "Profiles", 2),
-        Span::from(" │ ").dim(),
-        tab_label(Screen::Repositories, model.active, "Repositories", 3),
-        Span::from(" │ ").dim(),
-        tab_label(Screen::SystemSettings, model.active, "Settings", 4),
-        Span::from(" │ ").dim(),
-        tab_label(Screen::Help, model.active, "Help", 5),
-    ]);
-    frame.render_widget(Paragraph::new(tabs).block(Block::default().borders(Borders::ALL)), chunks[0]);
+    let header = vec![
+        Line::from(vec![
+            Span::from(" SkillWeaver v0.1.0 ").cyan().bold(),
+            Span::from("—".repeat(20)).dim(),
+            Span::from(" Gustavo Gutiérrez — Bogotá, Colombia ").dim(),
+        ]),
+        Line::from(vec![
+            tab_label(Screen::Dashboard, model.active, "Dashboard", 1),
+            Span::from(" │ ").dim(),
+            tab_label(Screen::Profiles, model.active, "Profiles", 2),
+            Span::from(" │ ").dim(),
+            tab_label(Screen::Repositories, model.active, "Repositories", 3),
+            Span::from(" │ ").dim(),
+            tab_label(Screen::SystemSettings, model.active, "Settings", 4),
+            Span::from(" │ ").dim(),
+            tab_label(Screen::Help, model.active, "Help", 5),
+        ]),
+        Line::from(Span::from("─".repeat(80)).dim()),
+    ];
+    frame.render_widget(Paragraph::new(header).block(Block::default().borders(Borders::ALL)), chunks[0]);
 
     match model.active {
         Screen::Dashboard => render_dashboard(frame, chunks[1], model),

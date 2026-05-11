@@ -116,9 +116,11 @@ pub fn execute_install(profile: &Profile, project_root: &Path, sources: &[Source
 
     let skills_dir = project_root.join(".agents/skills");
     if skills_dir.is_file() {
-        std::fs::remove_file(&skills_dir)?;
+        std::fs::remove_file(&skills_dir)
+            .map_err(|e| AppError::Io(std::io::Error::new(e.kind(), format!("cannot remove .agents/skills file: {e}"))))?;
     }
-    std::fs::create_dir_all(&skills_dir)?;
+    std::fs::create_dir_all(&skills_dir)
+        .map_err(|e| AppError::Io(std::io::Error::new(e.kind(), format!("cannot create .agents/skills dir: {e}"))))?;
 
     let mut downloaded = 0;
     let mut skipped = 0;

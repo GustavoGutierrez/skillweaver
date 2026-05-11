@@ -220,6 +220,32 @@ fn render_help(frame: &mut Frame, area: ratatui::layout::Rect) {
     );
 }
 
+fn render_modal(frame: &mut Frame, area: ratatui::layout::Rect, model: &AppModel) {
+    let modal = model.modal.unwrap();
+    let mut text = match modal {
+        Modal::CreateProfile => format!("Create Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::EditProfile => format!("Edit Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::DeleteProfileConfirm => "Delete selected profile? [Enter] confirm, [Esc] cancel".into(),
+        Modal::ImportPath => format!("Import Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::AddSkill => format!("Add Skill\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::AddRule => format!("Add Rule\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
+        Modal::InstallPath => format!("Install Profile\n\nTarget: {}\n\n[Enter] install  [Esc] cancel", model.input),
+        Modal::AddSource => {
+            let an = if model.input_focus_secondary { "" } else { " <active>" };
+            let ap = if model.input_focus_secondary { " <active>" } else { "" };
+            format!("Add Local Source\n\nName{an}: {}\nPath{ap}: {}\n\n[Tab] switch  [Enter] confirm  [Esc] cancel", model.input, model.input_secondary)
+        }
+    };
+    if !model.modal_error.is_empty() {
+        text.push_str(&format!("\n\nERROR: {}", model.modal_error));
+    }
+    frame.render_widget(
+        Paragraph::new(text).block(Block::default().title(Line::from(" Modal ").bold().yellow()).borders(Borders::ALL).yellow()),
+        area,
+    );
+}
+
 fn tab_label(screen: Screen, active: Screen, name: &str, num: usize) -> Span<'static> {
     let marker = if active == screen { "●" } else { "○" };
     let label = format!(" [{num}] {name} ");
@@ -254,37 +280,16 @@ pub fn render(frame: &mut Frame, model: &AppModel) {
     ];
     frame.render_widget(Paragraph::new(header).block(Block::default().borders(Borders::ALL)), chunks[0]);
 
-    match model.active {
-        Screen::Dashboard => render_dashboard(frame, chunks[1], model),
-        Screen::Profiles => render_profiles(frame, chunks[1], model),
-        Screen::Repositories => render_repositories(frame, chunks[1], model),
-        Screen::SystemSettings => render_settings(frame, chunks[1], model),
-        Screen::Help => render_help(frame, chunks[1]),
-    }
-
-    if let Some(modal) = model.modal {
-        let mut text = match modal {
-            Modal::CreateProfile => format!("Create Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::EditProfile => format!("Edit Profile\n\nName: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::DeleteProfileConfirm => "Delete selected profile? [Enter] confirm, [Esc] cancel".into(),
-            Modal::ImportPath => format!("Import Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::ExportPath => format!("Export Profiles\n\nFile path: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::AddSkill => format!("Add Skill to Profile\n\nSkill name: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::AddRule => format!("Add Rule to Profile\n\nRule: {}\n\n[Enter] confirm  [Esc] cancel", model.input),
-            Modal::InstallPath => format!("Install Profile\n\nTarget: {}\n\n[Enter] install  [Esc] cancel", model.input),
-            Modal::AddSource => {
-                let an = if model.input_focus_secondary { "" } else { " <active>" };
-                let ap = if model.input_focus_secondary { " <active>" } else { "" };
-                format!("Add Local Source\n\nName{an}: {}\nPath{ap}: {}\n\n[Tab] switch field  [Enter] confirm  [Esc] cancel", model.input, model.input_secondary)
-            }
-        };
-        if !model.modal_error.is_empty() {
-            text.push_str(&format!("\n\nERROR: {}", model.modal_error));
+    if model.modal.is_some() {
+        render_modal(frame, chunks[1], model);
+    } else {
+        match model.active {
+            Screen::Dashboard => render_dashboard(frame, chunks[1], model),
+            Screen::Profiles => render_profiles(frame, chunks[1], model),
+            Screen::Repositories => render_repositories(frame, chunks[1], model),
+            Screen::SystemSettings => render_settings(frame, chunks[1], model),
+            Screen::Help => render_help(frame, chunks[1]),
         }
-        frame.render_widget(
-            Paragraph::new(text).block(Block::default().title(Line::from(" Modal ").bold().yellow()).borders(Borders::ALL).yellow()),
-            chunks[1],
-        );
     }
 
     let footer_text: Line = if model.modal.is_some() {

@@ -405,11 +405,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
         KeyCode::Char('6') | KeyCode::Char('h') => model.active = Screen::Help,
         _ => match model.active {
             Screen::Dashboard => match key {
-                KeyCode::Down | KeyCode::Char('j') => {
-                    if !model.store.profiles.is_empty() {
-                        model.selected_profile =
-                            (model.selected_profile + 1).min(model.store.profiles.len() - 1);
-                    }
+                KeyCode::Down | KeyCode::Char('j') if !model.store.profiles.is_empty() => {
+                    model.selected_profile =
+                        (model.selected_profile + 1).min(model.store.profiles.len() - 1);
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     model.selected_profile = model.selected_profile.saturating_sub(1);
@@ -419,22 +417,18 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     save_model(model, store);
                     model.status = "Default profile selected".into();
                 }
-                KeyCode::Char('i') => {
-                    if selected_profile(model).is_some() {
-                        model.modal = Some(Modal::InstallPath);
-                        model.input = ".".to_string();
-                        model.modal_error.clear();
-                        model.status = "Press Enter to install here, or type a path".into();
-                    }
+                KeyCode::Char('i') if selected_profile(model).is_some() => {
+                    model.modal = Some(Modal::InstallPath);
+                    model.input = ".".to_string();
+                    model.modal_error.clear();
+                    model.status = "Press Enter to install here, or type a path".into();
                 }
                 _ => {}
             },
             Screen::Profiles => match key {
-                KeyCode::Down | KeyCode::Char('j') => {
-                    if !model.store.profiles.is_empty() {
-                        model.selected_profile =
-                            (model.selected_profile + 1).min(model.store.profiles.len() - 1);
-                    }
+                KeyCode::Down | KeyCode::Char('j') if !model.store.profiles.is_empty() => {
+                    model.selected_profile =
+                        (model.selected_profile + 1).min(model.store.profiles.len() - 1);
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     model.selected_profile = model.selected_profile.saturating_sub(1);
@@ -451,10 +445,8 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                         model.status = "Edit profile".into();
                     }
                 }
-                KeyCode::Char('x') => {
-                    if selected_profile(model).is_some() {
-                        model.modal = Some(Modal::DeleteProfileConfirm);
-                    }
+                KeyCode::Char('x') if selected_profile(model).is_some() => {
+                    model.modal = Some(Modal::DeleteProfileConfirm);
                 }
                 KeyCode::Char('d') => {
                     if let Some(profile) = selected_profile(model).cloned() {
@@ -483,21 +475,17 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                     model.modal_error.clear();
                     model.status = "Import profiles".into();
                 }
-                KeyCode::Char('s') => {
-                    if selected_profile(model).is_some() {
-                        model.modal = Some(Modal::AddSkill);
-                        model.input.clear();
-                        model.modal_error.clear();
-                        model.status = "Add skill to profile".into();
-                    }
+                KeyCode::Char('s') if selected_profile(model).is_some() => {
+                    model.modal = Some(Modal::AddSkill);
+                    model.input.clear();
+                    model.modal_error.clear();
+                    model.status = "Add skill to profile".into();
                 }
-                KeyCode::Char('r') => {
-                    if selected_profile(model).is_some() {
-                        model.modal = Some(Modal::AddRule);
-                        model.input.clear();
-                        model.modal_error.clear();
-                        model.status = "Add rule to profile".into();
-                    }
+                KeyCode::Char('r') if selected_profile(model).is_some() => {
+                    model.modal = Some(Modal::AddRule);
+                    model.input.clear();
+                    model.modal_error.clear();
+                    model.status = "Add rule to profile".into();
                 }
                 KeyCode::Char('X') => {
                     if let Some(profile) = selected_profile(model)
@@ -532,11 +520,9 @@ pub fn update(model: &mut AppModel, key: KeyCode, store: &ProfileStore) {
                 _ => {}
             },
             Screen::Repositories => match key {
-                KeyCode::Down | KeyCode::Char('j') => {
-                    if !model.discoveries.is_empty() {
-                        model.selected_discovery =
-                            (model.selected_discovery + 1).min(model.discoveries.len() - 1);
-                    }
+                KeyCode::Down | KeyCode::Char('j') if !model.discoveries.is_empty() => {
+                    model.selected_discovery =
+                        (model.selected_discovery + 1).min(model.discoveries.len() - 1);
                 }
                 KeyCode::Up | KeyCode::Char('k') => {
                     model.selected_discovery = model.selected_discovery.saturating_sub(1);

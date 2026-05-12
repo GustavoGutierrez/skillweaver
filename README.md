@@ -20,7 +20,7 @@ SkillWeaver lets you discover, preview, install, and share collections of AI age
 ### Homebrew (Linux)
 
 ```bash
-brew tap GustavoGutierrez/skillweaver https://github.com/GustavoGutierrez/skillweaver
+brew tap GustavoGutierrez/homebrew-skillweaver
 brew install skillweaver
 ```
 
@@ -30,7 +30,22 @@ To update:
 brew upgrade skillweaver
 ```
 
-> **Note:** The formula downloads a pre-built binary from GitHub Releases. Linux (x86_64) is supported. After the first release, update the SHA256 in `Formula/skillweaver.rb`.
+> **Linux only** — the formula downloads a pre-built binary from GitHub Releases.
+
+### Migrating from the old main-repo tap
+
+If you previously tapped the main repo directly:
+
+```bash
+# Remove the old tap
+brew untap GustavoGutierrez/skillweaver
+
+# Add the dedicated tap
+brew tap GustavoGutierrez/homebrew-skillweaver
+
+# Reinstall (or upgrade)
+brew install skillweaver
+```
 
 ### Build from Source
 
@@ -262,11 +277,12 @@ cargo build     # Build binary at target/debug/skillweaver
 The script:
 - Auto-detects bump type from conventional commits since last tag
 - Runs tests, builds release, packages tarball
-- Computes SHA256 and updates `Formula/skillweaver.rb`
+- Updates `packaging/homebrew/RELEASE_PROCESS.md` with new version notes
 - Bumps version in `Cargo.toml` and `src/ui.rs`
 - Commits, tags, pushes, and creates GitHub Release with `gh`
 
-Or manually: `git tag v0.0.2 && git push origin v0.0.2` (CI handles the rest).
+> **Note:** The formula lives in the dedicated tap repo (`GustavoGutierrez/homebrew-skillweaver`).  
+> The main repo holds only the release documentation under `packaging/homebrew/`.
 
 ---
 

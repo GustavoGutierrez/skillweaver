@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  TARFILE: skillweaver-x86_64-unknown-linux-gnu.tar.gz
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -21,27 +24,86 @@ jobs:
         run: |
           mkdir -p dist
           cp target/release/skillweaver dist/
-          cd dist && tar czf ../skillweaver-x86_64-unknown-linux-gnu.tar.gz skillweaver
-          cd .. && sha256sum skillweaver-x86_64-unknown-linux-gnu.tar.gz > skillweaver-x86_64-unknown-linux-gnu.tar.gz.sha256
+          cd dist && tar czf ../${{ env.TARFILE }} skillweaver
+          cd ..
+          sha256sum ${{ env.TARFILE }} > ${{ env.TARFILE }}.sha256
 
-      - name: Upload artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: skillweaver-linux
-          path: skillweaver-x86_64-unknown-linux-gnu.tar.gz*
+          name: skillweaver-release
+          path: |
+            ${{ env.TARFILE }}
+            ${{ env.TARFILE }}.sha256
 
   release:
     needs: build-linux
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      checksum: ${{ steps.checksum.outputs.checksum }}
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: skillweaver-linux
+          name: skillweaver-release
+          path: .
+
+      - id: version
+        run: echo "version=$(echo '${{ github.ref_name }}' | sed 's/^v//')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - id: checksum
+        run: echo "checksum=$(cat ${{ env.TARFILE }}.sha256 | awk '{print $1}')" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: skillweaver-x86_64-unknown-linux-gnu.tar.gz*
+          files: |
+            ${{ env.TARFILE }}
+            ${{ env.TARFILE }}.sha256
           generate_release_notes: true
+
+  publish-tap:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Render formula
+        run: |
+          mkdir -p "$RUNNER_TEMP/homebrew"
+          python3 scripts/render_homebrew_formula.py \
+            --version "${{ needs.release.outputs.version }}" \
+            --checksum "${{ needs.release.outputs.checksum }}" \
+            --output "$RUNNER_TEMP/homebrew/skillweaver.rb"
+
+      - name: Checkout tap repo
+        uses: actions/checkout@v4
+        with:
+          repository: GustavoGutierrez/homebrew-skillweaver
+          ssh-key: ${{ secrets.HOMEBREW_TAP_SSH_KEY }}
+          ssh-strict: false
+          path: tap
+
+      - name: Copy formula
+        run: |
+          mkdir -p tap/Formula
+          cp "$RUNNER_TEMP/homebrew/skillweaver.rb" tap/Formula/skillweaver.rb
+
+      - name: Copy docs
+        run: |
+          cp packaging/homebrew/README.md tap/
+          cp packaging/homebrew/RELEASE_PROCESS.md tap/
+
+      - name: Commit and push
+        run: |
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/skillweaver.rb README.md RELEASE_PROCESS.md
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "skillweaver ${{ needs.release.outputs.version }}"
+          git push

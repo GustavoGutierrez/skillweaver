@@ -10,12 +10,18 @@ use skillweaver::services::profile_io::import_profiles;
 
 pub fn run(args: &[String]) -> Result<()> {
     match args.get(1).map(|s| s.as_str()) {
+        Some("--version") | Some("-V") | Some("version") => {
+            println!("{}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
         Some("install") => cmd_install(args),
         Some("list") => cmd_list(),
         Some("import") => cmd_import(args),
         Some(cmd) => {
             eprintln!("Unknown command: {cmd}");
-            eprintln!("Usage: skillweaver [install <name> --target <path> | list | import <file>]");
+            eprintln!(
+                "Usage: skillweaver [--version | install <name> --target <path> | list | import <file>]"
+            );
             Ok(())
         }
         None => Ok(()),

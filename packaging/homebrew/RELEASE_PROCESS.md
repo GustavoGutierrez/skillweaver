@@ -32,6 +32,8 @@ The script:
 
 The tag push triggers GitHub Actions, which builds the tarball, computes the SHA256, creates the GitHub Release, renders the Homebrew formula, and publishes the tap update.
 
+The Linux release binary is built as a static `x86_64-unknown-linux-musl` artifact. This avoids host glibc version mismatches and is the most portable option for mainstream x86_64 Linux systems.
+
 ### 2. CI Publishes to Tap
 
 A GitHub Actions workflow in the main repo watches for new releases. On each release:

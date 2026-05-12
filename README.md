@@ -27,10 +27,18 @@ brew install skillweaver
 To update:
 
 ```bash
+brew update
 brew upgrade skillweaver
 ```
 
-> **Linux only** — the formula downloads a pre-built binary from GitHub Releases.
+If you need to reinstall the current version after a formula fix:
+
+```bash
+brew reinstall skillweaver
+```
+
+> **Linux only** — the formula downloads a pre-built static `musl` binary from GitHub Releases.
+> This avoids host glibc mismatches and is the most portable option for mainstream x86_64 Linux distributions.
 
 ### Migrating from the old main-repo tap
 

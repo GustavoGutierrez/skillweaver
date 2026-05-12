@@ -7,7 +7,7 @@ This tap contains the Homebrew formula for SkillWeaver's Linux binary releases.
 - **Canonical repo:** `GustavoGutierrez/homebrew-skillweaver`
 - **Formula:** `Formula/skillweaver.rb`
 - **Platform:** Linux only (x86_64)
-- **Binary source:** GitHub Releases (`skillweaver-x86_64-unknown-linux-gnu.tar.gz`)
+- **Binary source:** GitHub Releases (`skillweaver-x86_64-unknown-linux-musl.tar.gz`)
 
 ## Using the Tap
 
@@ -34,7 +34,7 @@ homebrew-skillweaver/
     └── skillweaver.rb  ← the Homebrew formula
 ```
 
-The formula downloads a pre-built tarball from the main repo's GitHub Releases and installs only the `skillweaver` binary — no source builds.
+The formula downloads a pre-built static `musl` tarball from the main repo's GitHub Releases and installs only the `skillweaver` binary — no source builds.
 
 ## Files and Responsibilities
 

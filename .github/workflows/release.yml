@@ -6,24 +6,29 @@ on:
       - 'v*'
 
 env:
-  TARFILE: skillweaver-x86_64-unknown-linux-gnu.tar.gz
+  TARFILE: skillweaver-x86_64-unknown-linux-musl.tar.gz
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install musl toolchain
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
 
       - name: Build release
-        run: cargo build --release
+        run: cargo build --release --target x86_64-unknown-linux-musl
 
       - name: Package
         run: |
           mkdir -p dist
-          cp target/release/skillweaver dist/
+          cp target/x86_64-unknown-linux-musl/release/skillweaver dist/
           cd dist && tar czf ../${{ env.TARFILE }} skillweaver
           cd ..
           sha256sum ${{ env.TARFILE }} > ${{ env.TARFILE }}.sha256
@@ -38,7 +43,7 @@ jobs:
 
   release:
     needs: build-linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
     outputs:
@@ -67,7 +72,7 @@ jobs:
 
   publish-tap:
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout source repo
         uses: actions/checkout@v4
